@@ -3,8 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OptiByte - Premium Lossless Word Document & Prompt Token Optimizer</title>
-    <meta name="description" content="Optimize your Word documents, text, and markdown files by up to 70% with 100% lossless compression. Optimized for Claude, ChatGPT, and Gemini context limits. Complete local privacy.">
+    <!-- Google Analytics GA4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      
+      // GA4 tracking ID (Replace this placeholder G-XXXXXXXXXX with the real one)
+      const GA_TRACKING_ID = 'G-XXXXXXXXXX'; 
+      if (GA_TRACKING_ID !== 'G-XXXXXXXXXX' && window.location.hostname !== 'localhost') {
+        gtag('config', GA_TRACKING_ID);
+      }
+    </script>
+    <title>OptiByte - Premium Lossless LLM Prompt & Document Token Optimizer</title>
+    <meta name="description" content="Optimize your Word documents, PDF, text, and markdown files by up to 70% with 100% lossless compression. Optimized for Claude, ChatGPT, and Gemini context limits. Complete local privacy.">
+    <meta name="keywords" content="token optimizer, prompt compression, markitdown, LLM tokens, context limit, prompt helper, lossless compression, Claude 3.5, GPT-4o, Gemini 2.5">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://optibyte-ypd6.onrender.com/">
+    <meta property="og:title" content="OptiByte - Premium Lossless LLM Prompt & Document Token Optimizer">
+    <meta property="og:description" content="Compress your prompts and files by up to 70% with 100% lossless client-side compression. Full local privacy.">
+    <meta property="og:image" content="https://optibyte-ypd6.onrender.com/optibyte_ui_mockup.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://optibyte-ypd6.onrender.com/">
+    <meta property="twitter:title" content="OptiByte - Premium Lossless LLM Prompt & Document Token Optimizer">
+    <meta property="twitter:description" content="Compress your prompts and files by up to 70% with 100% lossless client-side compression. Full local privacy.">
+    <meta property="twitter:image" content="https://optibyte-ypd6.onrender.com/optibyte_ui_mockup.png">
     <!-- Google Fonts for premium typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -166,9 +194,9 @@
                             <span id="label-lvl3" style="display:none;"></span>
                             <span id="label-lvl4" style="display:none;"></span>
 
-                            <!-- Visual Level Selector Cards -->
-                            <div class="level-selector" id="level-selector">
-                                <div class="level-card" data-level="1" id="level-card-1">
+                             <!-- Visual Level Selector Cards -->
+                            <div class="level-selector" id="level-selector" role="radiogroup" aria-label="Compression Level Selector">
+                                <div class="level-card" data-level="1" id="level-card-1" role="radio" aria-checked="false" tabindex="0" aria-label="Level 1: Clean. whitespace and CSV tables. Estimated savings 15 percent.">
                                     <div class="level-card-top">
                                         <div class="level-badge lc-cyan">L1</div>
                                         <span class="level-est">~15%</span>
@@ -176,7 +204,7 @@
                                     <span class="level-name">Clean</span>
                                     <span class="level-desc">Whitespace &amp; CSV tables</span>
                                 </div>
-                                <div class="level-card" data-level="2" id="level-card-2">
+                                <div class="level-card" data-level="2" id="level-card-2" role="radio" aria-checked="false" tabindex="0" aria-label="Level 2: Brevity. phrase contractions. Estimated savings 30 percent.">
                                     <div class="level-card-top">
                                         <div class="level-badge lc-emerald">L2</div>
                                         <span class="level-est">~30%</span>
@@ -184,7 +212,7 @@
                                     <span class="level-name">Brevity</span>
                                     <span class="level-desc">Phrase contractions</span>
                                 </div>
-                                <div class="level-card" data-level="3" id="level-card-3">
+                                <div class="level-card" data-level="3" id="level-card-3" role="radio" aria-checked="false" tabindex="0" aria-label="Level 3: OBUP Ultra. BPE synonym maps. Estimated savings 50 percent.">
                                     <div class="level-card-top">
                                         <div class="level-badge lc-violet">L3</div>
                                         <span class="level-est">~50%</span>
@@ -192,7 +220,7 @@
                                     <span class="level-name">OBUP Ultra</span>
                                     <span class="level-desc">BPE synonym maps</span>
                                 </div>
-                                <div class="level-card active" data-level="4" id="level-card-4">
+                                <div class="level-card active" data-level="4" id="level-card-4" role="radio" aria-checked="true" tabindex="0" aria-label="Level 4: Quantum. LZ77 glossary engine. Estimated savings 65 percent.">
                                     <div class="level-card-top">
                                         <div class="level-badge lc-pink">L4</div>
                                         <span class="level-est">~65%</span>
@@ -589,14 +617,19 @@
         <div id="confetti-container" class="confetti-container"></div>
 
         <!-- FOOTER -->
-        <footer class="app-footer">
-            <div class="footer-privacy-text">
+        <footer class="app-footer" style="display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 20px 0;">
+            <div class="footer-privacy-text" style="display: flex; align-items: center; gap: 8px; justify-content: center;">
                 <span class="shield-icon">
                     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                     </svg>
                 </span>
                 <span><strong>No data leaves your device.</strong> Documents are parsed and optimized purely in browser-sandbox client memory. Compatible with Claude 4/3.5, GPT-4o, GPT-4.1, Llama-4, Gemini 2.5, and DeepSeek-R1.</span>
+            </div>
+            <div class="footer-links" style="display: flex; gap: 15px; font-size: 11.5px; opacity: 0.8; justify-content: center;">
+                <a href="/privacy.html" style="color: var(--text-dim); text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='var(--accent-violet-light)'" onmouseout="this.style.color='var(--text-dim)'">Privacy Policy</a>
+                <span style="color: rgba(139, 92, 246, 0.2);">|</span>
+                <a href="/terms.html" style="color: var(--text-dim); text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='var(--accent-violet-light)'" onmouseout="this.style.color='var(--text-dim)'">Terms of Service</a>
             </div>
         </footer>
     </div>

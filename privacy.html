@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - OptiByte</title>
+    <!-- Google Fonts for premium typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Abstract Gradient Background Blobs -->
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+    <div class="bg-glow bg-glow-3"></div>
+
+    <div class="app-container" style="max-width: 800px; padding: 40px 20px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between;">
+        <header class="app-header" style="border-bottom: 1px solid rgba(139, 92, 246, 0.1); padding-bottom: 20px; margin-bottom: 40px;">
+            <div class="brand">
+                <a href="/" style="display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit;">
+                    <div class="logo-icon">
+                        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
+                            <path d="M12 12v9" />
+                            <path d="m8 17 4 4 4-4" />
+                        </svg>
+                    </div>
+                    <div class="brand-text">
+                        <h1 class="title-main" style="margin: 0; font-size: 24px;">OptiByte</h1>
+                    </div>
+                </a>
+            </div>
+            <div class="header-actions">
+                <a href="/" class="btn btn-secondary" style="text-decoration: none; display: flex; align-items: center; gap: 8px;">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    <span>Back to App</span>
+                </a>
+            </div>
+        </header>
+
+        <main style="flex: 1; margin-bottom: 60px;">
+            <div class="glass-card" style="padding: 40px; border-radius: 16px; background: rgba(13, 10, 25, 0.45); border: 1px solid rgba(139, 92, 246, 0.12); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
+                <h2 style="font-family: 'Outfit', sans-serif; font-size: 32px; font-weight: 800; margin-top: 0; margin-bottom: 24px; background: linear-gradient(135deg, #ffffff 30%, #c084fc 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Privacy Policy</h2>
+                <p style="color: var(--text-muted); font-size: 13.5px; margin-bottom: 30px;">Last Updated: June 3, 2026</p>
+
+                <div class="legal-content" style="color: var(--text-dim); font-size: 14.5px; line-height: 1.7; display: flex; flex-direction: column; gap: 24px;">
+                    <section>
+                        <h3 style="color: #ffffff; font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 600; margin-top: 0; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                            <span style="width: 4px; height: 16px; background: var(--accent-violet); border-radius: 2px;"></span>
+                            1. Commitment to Privacy
+                        </h3>
+                        <p>At OptiByte, privacy is not an afterthought—it is the core design principle of our tool. We believe that your prompt data, documents, and corporate records are highly sensitive and should never be stored, harvested, or transmitted unnecessarily.</p>
+                    </section>
+
+                    <section>
+                        <h3 style="color: #ffffff; font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 600; margin-top: 0; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                            <span style="width: 4px; height: 16px; background: var(--accent-violet); border-radius: 2px;"></span>
+                            2. 100% Client-Side Prompt Optimization
+                        </h3>
+                        <p>All core prompt compression, tokenizer calculations, synoynm replacement mapping, and vocabulary adjustments run <strong>purely in your local browser-sandbox client memory</strong>. The text you type, paste, or compress never leaves your device and is never sent to our servers.</p>
+                    </section>
+
+                    <section>
+                        <h3 style="color: #ffffff; font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 600; margin-top: 0; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                            <span style="width: 4px; height: 16px; background: var(--accent-violet); border-radius: 2px;"></span>
+                            3. Document Upload & File Processing
+                        </h3>
+                        <p>When you use the document uploader (PDF, DOCX, XLSX, etc.), the file is transmitted securely (via HTTPS) to our lightweight conversion endpoint. The server extracts the text using the Python <code>markitdown</code> package, returns the extracted markdown to your browser, and <strong>immediately deletes the file from our storage</strong>. We do not keep logs of your document contents, nor do we train models or profile users using these files.</p>
+                    </section>
+
+                    <section>
+                        <h3 style="color: #ffffff; font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 600; margin-top: 0; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                            <span style="width: 4px; height: 16px; background: var(--accent-violet); border-radius: 2px;"></span>
+                            4. Analytics and Cookieless Tracking
+                        </h3>
+                        <p>We use Google Analytics 4 (GA4) to analyze anonymous website traffic volume, referral channels, and device types. This allows us to optimize the website experience. We do not track personal identifying information, IP addresses are anonymized, and we do not track prompt contents or user files inside the tracking platform.</p>
+                    </section>
+
+                    <section>
+                        <h3 style="color: #ffffff; font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 600; margin-top: 0; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                            <span style="width: 4px; height: 16px; background: var(--accent-violet); border-radius: 2px;"></span>
+                            5. Feedback Forms
+                        </h3>
+                        <p>When you submit a feedback form, the submitted rating and suggestion text are stored in our feedback logs purely anonymously. No email address, IP address, or identity handles are associated with feedback records unless you explicitly write them in your message text.</p>
+                    </section>
+
+                    <section>
+                        <h3 style="color: #ffffff; font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 600; margin-top: 0; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                            <span style="width: 4px; height: 16px; background: var(--accent-violet); border-radius: 2px;"></span>
+                            6. Security Measures
+                        </h3>
+                        <p>We employ production-grade security headers (Helmet), HTTPS-enforced TLS encryption, input sanitization libraries, and strict API rate limiting to safeguard the service from brute-force scans and malicious abuse.</p>
+                    </section>
+
+                    <section style="margin-top: 10px; border-top: 1px solid rgba(139, 92, 246, 0.08); padding-top: 24px;">
+                        <p>For any questions or support requests regarding this policy, please reach out via GitHub or email: <a href="mailto:rakeshmunikoti04@gmail.com" style="color: var(--accent-violet-light); text-decoration: none;">rakeshmunikoti04@gmail.com</a>.</p>
+                    </section>
+                </div>
+            </div>
+        </main>
+
+        <footer class="app-footer" style="text-align: center; border-top: 1px solid rgba(139, 92, 246, 0.1); padding-top: 20px; font-size: 12px; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center;">
+            <span>&copy; 2026 OptiByte. All rights reserved.</span>
+            <div style="display: flex; gap: 15px;">
+                <a href="/privacy.html" style="color: var(--text-dim); text-decoration: none; font-weight: 500;">Privacy Policy</a>
+                <a href="/terms.html" style="color: var(--text-dim); text-decoration: none; font-weight: 500;">Terms of Service</a>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

@@ -489,13 +489,20 @@ function setupSliderHandlers() {
         if (originalTextarea.value) updateWorkspace(originalTextarea.value);
     });
 
-    // Level card click handlers
+    // Level card click and keyboard handlers
     document.querySelectorAll('.level-card').forEach(card => {
-        card.addEventListener('click', () => {
+        const selectLevel = () => {
             const level = parseInt(card.dataset.level);
             squeezeSlider.value = level;
             syncSliderUI(level);
             if (originalTextarea.value) updateWorkspace(originalTextarea.value);
+        };
+        card.addEventListener('click', selectLevel);
+        card.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                selectLevel();
+            }
         });
     });
 
@@ -516,9 +523,11 @@ function setupSliderHandlers() {
 
 // Syncs rules checklist checkboxes with slider level values
 function syncSliderUI(level) {
-    // Update level cards active state
+    // Update level cards active state and ARIA attributes
     document.querySelectorAll('.level-card').forEach(card => {
-        card.classList.toggle('active', parseInt(card.dataset.level) === level);
+        const isActive = parseInt(card.dataset.level) === level;
+        card.classList.toggle('active', isActive);
+        card.setAttribute('aria-checked', isActive ? 'true' : 'false');
     });
 
     // Reset labels active state (hidden spans kept for compat)

@@ -362,6 +362,13 @@ body {
     transition: var(--transition-tactile);
 }
 
+.level-card:focus-visible {
+    outline: 3px dashed var(--accent-violet);
+    outline-offset: 3px;
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px 0px var(--border-color);
+}
+
 .level-card:hover {
     transform: translate(-1px, -1px);
     box-shadow: 4px 4px 0px 0px var(--border-color);
@@ -465,7 +472,8 @@ body {
     user-select: none;
 }
 
-.toggle-control:hover {
+.toggle-control:hover,
+.toggle-control:focus-within {
     background: #FFFDF0;
     border: 1.5px solid var(--border-color);
     box-shadow: 2px 2px 0px var(--border-color);

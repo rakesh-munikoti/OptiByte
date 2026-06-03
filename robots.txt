@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /temp/
+Disallow: /feedback/
+
+Sitemap: https://optibyte-ypd6.onrender.com/sitemap.xml
