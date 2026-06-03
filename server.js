@@ -7,6 +7,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import helmet from 'helmet';
 import { rateLimit } from 'express-rate-limit';
+import compression from 'compression';
 import { logger } from './logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -15,7 +16,8 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Enable CORS and JSON parsing
+// Enable compression, CORS, and JSON parsing
+app.use(compression());
 app.use(cors());
 app.use(express.json());
 
@@ -77,6 +79,15 @@ const feedbackLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     limit: 5,
     message: { success: false, error: 'Too many feedback submissions. Please try again after 15 minutes.' },
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+});
+
+// Specific limit for client error logging: 30 logs per 15 minutes
+const errorLogLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 30,
+    message: { success: false, error: 'Too many error logs sent.' },
     standardHeaders: 'draft-7',
     legacyHeaders: false,
 });
@@ -351,6 +362,22 @@ app.post('/api/feedback', feedbackLimiter, (req, res) => {
         logger.error('Error saving feedback', err);
         res.status(500).json({ success: false, error: 'Failed to save feedback on the server.' });
     }
+});
+
+// Endpoint to receive and log client-side JavaScript errors
+app.post('/api/log-error', errorLogLimiter, (req, res) => {
+    const { message, url, line, column, errorObj, userAgent } = req.body;
+    
+    logger.error('Client-side JavaScript Error', {
+        clientMessage: message,
+        clientUrl: url,
+        clientLine: line,
+        clientColumn: column,
+        errorDetails: errorObj,
+        userAgent: userAgent || req.headers['user-agent']
+    });
+    
+    res.json({ success: true });
 });
 
 // Start server

@@ -118,6 +118,7 @@ function initializeApp() {
     setupHistoryHandler();
     setupWindowPasteHandler();
     setupFeedbackHandler();
+    setupClientErrorLogger();
     
     // Sync slider rules and checkboxes on initial load
     syncSliderUI(parseInt(squeezeSlider.value));
@@ -1432,4 +1433,59 @@ function setupFeedbackHandler() {
             }
         });
     }
+}
+
+// Setup global listener to catch and report client-side JavaScript errors to server logs
+function setupClientErrorLogger() {
+    window.onerror = function (message, url, line, column, errorObj) {
+        // Prepare payload, strip error stack to avoid excessive length if needed
+        const payload = {
+            message: message || 'Unknown client error',
+            url: url || window.location.href,
+            line: line || 0,
+            column: column || 0,
+            errorObj: errorObj ? {
+                message: errorObj.message,
+                stack: errorObj.stack ? errorObj.stack.substring(0, 2000) : ''
+            } : null,
+            userAgent: navigator.userAgent
+        };
+
+        // Fire-and-forget POST to the server
+        fetch('/api/log-error', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        }).catch(() => {
+            // Silence networking failures to avoid infinite error logging loops
+        });
+
+        // Let the browser handle standard console printing
+        return false;
+    };
+
+    window.onunhandledrejection = function (event) {
+        const reason = event.reason;
+        const payload = {
+            message: reason instanceof Error ? reason.message : String(reason),
+            url: window.location.href,
+            line: 0,
+            column: 0,
+            errorObj: reason instanceof Error ? {
+                message: reason.message,
+                stack: reason.stack ? reason.stack.substring(0, 2000) : ''
+            } : { reason: String(reason) },
+            userAgent: navigator.userAgent
+        };
+
+        fetch('/api/log-error', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        }).catch(() => {});
+    };
 }
