@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: optibyte
+    env: docker
+    plan: free
+    healthCheckPath: /api/health
+    startCommand: "" # Dockerfile CMD is used automatically

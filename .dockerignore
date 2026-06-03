@@ -1,0 +1,20 @@
+# Dependencies
+node_modules
+npm-debug.log
+
+# Uploads and temporary files
+temp/*
+feedback/submissions.json
+
+# Version control and IDE files
+.git
+.gitignore
+.gemini
+.idea
+.vscode
+*.log
+
+# Deployment configuration
+render.yaml
+Dockerfile
+.dockerignore
