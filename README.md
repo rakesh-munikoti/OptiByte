@@ -3,6 +3,8 @@
 [![CI Status](https://github.com/rakesh-munikoti/OptiByte/actions/workflows/ci.yml/badge.svg)](https://github.com/rakesh-munikoti/OptiByte/actions)
 [![Render Status](https://api.render.com/deploy/srv-d8g2pbdckfvc73e19eig?style=flat)](https://dashboard.render.com/web/srv-d8g2pbdckfvc73e19eig)
 
+![OptiByte UI Mockup](./optibyte_ui_mockup.png)
+
 **OptiByte** (OptiByte Ultra Protocol – OBUP) is a premium, privacy‑first token optimizer for LLM prompts and documents. All core compression runs client‑side in the browser, ensuring that your prompts never leave the user’s device. The lightweight Node + Python backend only handles file‑to‑text conversion via the `markitdown` library.
 
 ## Features
