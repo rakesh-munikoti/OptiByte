@@ -69,42 +69,90 @@ const upload = multer({
     limits: { fileSize: 20 * 1024 * 1024 } // 20MB limit
 });
 
+// Cached python environment status to avoid spawning shell processes on every health check
+let pythonStatus = {
+    checked: false,
+    cmd: null,
+    hasMarkItDown: false,
+    message: 'Checking...',
+    runMethod: ''
+};
+
+// Perform check once on startup/first load
+function checkPythonEnvironment(callback) {
+    if (pythonStatus.checked) {
+        if (callback) callback(pythonStatus);
+        return;
+    }
+
+    const isWin = process.platform === 'win32';
+    const commands = isWin ? ['python', 'py', 'python3'] : ['python3', 'python'];
+
+    let index = 0;
+    function tryNext() {
+        if (index >= commands.length) {
+            pythonStatus.checked = true;
+            pythonStatus.cmd = null;
+            pythonStatus.hasMarkItDown = false;
+            pythonStatus.message = 'Python is not installed or not on PATH.';
+            if (callback) callback(pythonStatus);
+            return;
+        }
+        const cmd = commands[index++];
+        exec(`${cmd} --version`, (err) => {
+            if (!err) {
+                // Found python command, now check for markitdown
+                exec(`${cmd} -c "import markitdown; print('ok')"`, (pyErr) => {
+                    pythonStatus.checked = true;
+                    pythonStatus.cmd = cmd;
+                    if (pyErr) {
+                        pythonStatus.hasMarkItDown = false;
+                        pythonStatus.message = 'Server is running, but markitdown is not installed.';
+                    } else {
+                        pythonStatus.hasMarkItDown = true;
+                        pythonStatus.message = `Server running. MarkItDown ready via ${cmd}.`;
+                        pythonStatus.runMethod = `${cmd} -m markitdown`;
+                    }
+                    if (callback) callback(pythonStatus);
+                });
+                return;
+            }
+            tryNext();
+        });
+    }
+    tryNext();
+}
+
 // Detect which Python command works on this machine
 function getPythonCommand(callback) {
-    exec('python --version', (err) => {
-        if (!err) return callback('python');
-        exec('py --version', (err2) => {
-            if (!err2) return callback('py');
-            callback(null); // No python found
-        });
+    checkPythonEnvironment((status) => {
+        callback(status.cmd);
     });
 }
 
 // Ping endpoint to verify server is active and check for markitdown package
 app.get('/api/health', (req, res) => {
-    getPythonCommand((pythonCmd) => {
-        if (!pythonCmd) {
+    checkPythonEnvironment((status) => {
+        if (!status.cmd) {
             return res.json({
                 status: 'warning',
-                message: 'Python is not installed or not on PATH.',
+                message: status.message,
                 hasMarkItDown: false
             });
         }
-        exec(`${pythonCmd} -c "import markitdown; print('ok')"`, (pyErr, stdout) => {
-            if (pyErr) {
-                return res.json({
-                    status: 'warning',
-                    message: 'Server is running, but markitdown is not installed.',
-                    error: 'Please run: pip install markitdown',
-                    hasMarkItDown: false
-                });
-            }
+        if (!status.hasMarkItDown) {
             return res.json({
-                status: 'ok',
-                message: `Server running. MarkItDown ready via ${pythonCmd}.`,
-                hasMarkItDown: true,
-                runMethod: `${pythonCmd} -m markitdown`
+                status: 'warning',
+                message: status.message,
+                error: 'Please run: pip install markitdown',
+                hasMarkItDown: false
             });
+        }
+        return res.json({
+            status: 'ok',
+            message: status.message,
+            hasMarkItDown: true,
+            runMethod: status.runMethod
         });
     });
 });
@@ -220,5 +268,9 @@ app.listen(PORT, () => {
     console.log(`=======================================================`);
     console.log(`OptiByte Backend running on: http://localhost:${PORT}`);
     console.log(`Checking for markitdown installation...`);
-    console.log(`=======================================================`);
+    // Warm up the python environment check cache
+    checkPythonEnvironment((status) => {
+        console.log(`Status: ${status.message}`);
+        console.log(`=======================================================`);
+    });
 });
