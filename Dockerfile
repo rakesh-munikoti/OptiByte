@@ -12,8 +12,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Install markitdown within the virtual environment
-RUN pip install --no-cache-dir markitdown
+# Install markitdown with all document format extensions within the virtual environment
+RUN pip install --no-cache-dir "markitdown[all]"
 
 # Set workspace directory
 WORKDIR /app
