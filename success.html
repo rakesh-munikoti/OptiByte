@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout Success - OptiByte Enterprise</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .success-card {
+            background: var(--bg-card);
+            border: var(--brutalist-border-thick);
+            padding: 50px;
+            max-width: 600px;
+            margin: 60px auto;
+            box-shadow: var(--brutalist-shadow-lg);
+            text-align: center;
+        }
+
+        .api-key-box {
+            background: var(--bg-base);
+            border: var(--brutalist-border);
+            padding: 20px;
+            margin: 30px 0;
+            font-family: var(--font-mono);
+            font-size: 18px;
+            font-weight: 700;
+            word-break: break-all;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .btn-copy {
+            background: var(--accent-yellow);
+            color: #000;
+            border: var(--brutalist-border);
+            padding: 8px 15px;
+            font-family: var(--font-display);
+            font-weight: 800;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: var(--transition-tactile);
+            white-space: nowrap;
+        }
+
+        .btn-copy:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 3px 3px 0px 0px var(--border-color);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--bg-grid);
+            border-top-color: var(--accent-violet);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header" style="justify-content: center;">
+            <div class="brand">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
+                        <path d="M12 12v9" />
+                        <path d="m8 17 4 4 4-4" />
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <h1 class="title-main">OptiByte</h1>
+                    <span class="tagline">API Portal</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="app-main">
+            <div class="success-card" id="status-card">
+                <div id="loading-state">
+                    <div class="loading-spinner" style="margin-bottom: 20px;"></div>
+                    <h2 style="font-family: var(--font-display); font-size: 28px; font-weight: 900; text-transform: uppercase;">Provisioning Your Key...</h2>
+                    <p style="font-size: 16px; margin-top: 10px;">Please wait while we confirm your payment and generate your API key.</p>
+                </div>
+
+                <div id="success-state" style="display: none;">
+                    <div style="width: 64px; height: 64px; background: var(--accent-green); border: var(--brutalist-border); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </div>
+                    <h2 style="font-family: var(--font-display); font-size: 32px; font-weight: 900; text-transform: uppercase;">Payment Successful!</h2>
+                    <p style="font-size: 16px; margin-top: 15px; font-weight: 600;">Here is your private API key. Save it securely, as you will not be able to view it again.</p>
+                    
+                    <div class="api-key-box">
+                        <span id="api-key-display">ob_xxxxxxxxxxxx</span>
+                        <button class="btn-copy" id="btn-copy-key">Copy</button>
+                    </div>
+
+                    <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 30px;">
+                        Plan: <strong id="plan-display">...</strong> | Daily Limit: <strong id="limit-display">...</strong> tokens
+                    </p>
+
+                    <a href="/index.html" style="text-decoration: none; display: inline-block; padding: 12px 24px; background: #000; color: #fff; border: var(--brutalist-border); font-family: var(--font-display); font-weight: 800; text-transform: uppercase; transition: var(--transition-tactile);">
+                        Return to App
+                    </a>
+                </div>
+
+                <div id="error-state" style="display: none;">
+                    <div style="width: 64px; height: 64px; background: var(--accent-pink); border: var(--brutalist-border); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </div>
+                    <h2 style="font-family: var(--font-display); font-size: 28px; font-weight: 900; text-transform: uppercase;">Error Retrieving Key</h2>
+                    <p id="error-message" style="font-size: 16px; margin-top: 15px; font-weight: 600;">We could not locate your session.</p>
+                    <a href="/pricing.html" style="text-decoration: none; display: inline-block; margin-top: 20px; padding: 12px 24px; background: #000; color: #fff; border: var(--brutalist-border); font-family: var(--font-display); font-weight: 800; text-transform: uppercase; transition: var(--transition-tactile);">
+                        Return to Pricing
+                    </a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        async function fetchKey() {
+            const params = new URLSearchParams(window.location.search);
+            const paymentId = params.get('payment_id');
+
+            if (!paymentId) {
+                document.getElementById('loading-state').style.display = 'none';
+                document.getElementById('error-state').style.display = 'block';
+                return;
+            }
+
+            try {
+                // Poll the endpoint a few times in case the webhook is slightly delayed
+                let attempts = 0;
+                const maxAttempts = 5;
+                let data = null;
+
+                while (attempts < maxAttempts) {
+                    const response = await fetch(`/api/payment/retrieve-key?payment_id=${paymentId}`);
+                    data = await response.json();
+                    
+                    if (data.success) {
+                        break;
+                    }
+                    
+                    attempts++;
+                    await new Promise(r => setTimeout(r, 2000));
+                }
+
+                document.getElementById('loading-state').style.display = 'none';
+
+                if (data && data.success) {
+                    document.getElementById('success-state').style.display = 'block';
+                    document.getElementById('api-key-display').textContent = data.apiKey;
+                    document.getElementById('plan-display').textContent = data.plan;
+                    document.getElementById('limit-display').textContent = data.dailyLimit.toLocaleString();
+                } else {
+                    document.getElementById('error-state').style.display = 'block';
+                    if (data && data.error) {
+                        document.getElementById('error-message').textContent = data.error;
+                    }
+                }
+            } catch (err) {
+                document.getElementById('loading-state').style.display = 'none';
+                document.getElementById('error-state').style.display = 'block';
+                document.getElementById('error-message').textContent = "Failed to connect to server.";
+            }
+        }
+
+        function copyKey() {
+            const keyText = document.getElementById('api-key-display').textContent;
+            navigator.clipboard.writeText(keyText).then(() => {
+                const btn = document.querySelector('.btn-copy');
+                btn.textContent = 'Copied!';
+                btn.style.background = 'var(--accent-green)';
+                setTimeout(() => {
+                    btn.textContent = 'Copy';
+                    btn.style.background = 'var(--accent-yellow)';
+                }, 2000);
+            });
+        }
+
+        document.getElementById('btn-copy-key').addEventListener('click', copyKey);
+
+        // Run fetch on load
+        fetchKey();
+    </script>
+</body>
+</html>

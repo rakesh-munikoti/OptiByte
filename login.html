@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - OptiByte Enterprise</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .auth-card {
+            background: var(--bg-card);
+            border: var(--brutalist-border-thick);
+            padding: 40px;
+            max-width: 450px;
+            width: 100%;
+            margin: 60px auto;
+            box-shadow: var(--brutalist-shadow-lg);
+        }
+
+        .auth-title {
+            font-family: var(--font-display);
+            font-size: 32px;
+            font-weight: 900;
+            text-transform: uppercase;
+            margin-bottom: 25px;
+            letter-spacing: -1px;
+            text-align: center;
+        }
+
+        .auth-form-group {
+            margin-bottom: 20px;
+        }
+
+        .auth-form-group label {
+            display: block;
+            font-weight: 700;
+            margin-bottom: 8px;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+
+        .auth-input {
+            width: 100%;
+            padding: 12px 15px;
+            font-family: var(--font-mono);
+            font-size: 14px;
+            border: var(--brutalist-border);
+            background: var(--bg-base);
+            outline: none;
+            transition: var(--transition-tactile);
+        }
+
+        .auth-input:focus {
+            box-shadow: var(--brutalist-shadow-sm);
+            transform: translate(-2px, -2px);
+        }
+
+        .btn-auth {
+            width: 100%;
+            padding: 15px;
+            font-family: var(--font-display);
+            font-size: 18px;
+            font-weight: 800;
+            text-transform: uppercase;
+            background: var(--accent-green);
+            color: #000;
+            border: var(--brutalist-border);
+            cursor: pointer;
+            transition: var(--transition-tactile);
+            margin-top: 10px;
+        }
+
+        .btn-auth:hover {
+            transform: translate(-3px, -3px);
+            box-shadow: var(--brutalist-shadow);
+        }
+
+        .auth-toggle {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .auth-toggle a {
+            color: var(--accent-violet);
+            text-decoration: none;
+            font-weight: 800;
+            border-bottom: 2px solid transparent;
+            transition: 0.2s ease;
+        }
+
+        .auth-toggle a:hover {
+            border-color: var(--accent-violet);
+        }
+
+        .error-box {
+            background: var(--accent-pink);
+            color: white;
+            padding: 10px;
+            border: var(--brutalist-border-thin);
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header" style="justify-content: center;">
+            <div class="brand">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
+                        <path d="M12 12v9" />
+                        <path d="m8 17 4 4 4-4" />
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <h1 class="title-main">OptiByte</h1>
+                </div>
+            </div>
+        </header>
+
+        <main class="app-main">
+            <!-- LOGIN FORM -->
+            <div class="auth-card" id="login-card">
+                <h2 class="auth-title">Welcome Back</h2>
+                <div class="error-box" id="login-error"></div>
+                <form id="login-form">
+                    <div class="auth-form-group">
+                        <label for="login-email">Email Address</label>
+                        <input type="email" id="login-email" class="auth-input" required placeholder="dev@example.com">
+                    </div>
+                    <div class="auth-form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" class="auth-input" required placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="btn-auth">Sign In</button>
+                </form>
+                <div class="auth-toggle">
+                    Don't have an account? <a href="#" id="link-to-register">Register</a>
+                </div>
+            </div>
+
+            <!-- REGISTER FORM -->
+            <div class="auth-card" id="register-card" style="display: none;">
+                <h2 class="auth-title">Create Account</h2>
+                <div class="error-box" id="register-error"></div>
+                <form id="register-form">
+                    <div class="auth-form-group">
+                        <label for="register-email">Email Address</label>
+                        <input type="email" id="register-email" class="auth-input" required placeholder="dev@example.com">
+                    </div>
+                    <div class="auth-form-group">
+                        <label for="register-password">Password</label>
+                        <input type="password" id="register-password" class="auth-input" required placeholder="••••••••" minlength="6">
+                    </div>
+                    <button type="submit" class="btn-auth" style="background: var(--accent-yellow);">Create API Key</button>
+                </form>
+                <div class="auth-toggle">
+                    Already have an account? <a href="#" id="link-to-login">Sign In</a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Redirect if already logged in
+        if (localStorage.getItem('ob_token')) {
+            window.location.href = '/dashboard.html';
+        }
+
+        function toggleAuth() {
+            const login = document.getElementById('login-card');
+            const register = document.getElementById('register-card');
+            if (login.style.display === 'none') {
+                login.style.display = 'block';
+                register.style.display = 'none';
+            } else {
+                login.style.display = 'none';
+                register.style.display = 'block';
+            }
+        }
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const errorBox = document.getElementById('login-error');
+            
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    localStorage.setItem('ob_token', data.token);
+                    window.location.href = '/dashboard.html';
+                } else {
+                    errorBox.textContent = data.error;
+                    errorBox.style.display = 'block';
+                }
+            } catch (err) {
+                errorBox.textContent = 'Server connection error';
+                errorBox.style.display = 'block';
+            }
+        });
+
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            const errorBox = document.getElementById('register-error');
+            
+            try {
+                const res = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    localStorage.setItem('ob_token', data.token);
+                    window.location.href = '/dashboard.html';
+                } else {
+                    errorBox.textContent = data.error;
+                    errorBox.style.display = 'block';
+                }
+            } catch (err) {
+                errorBox.textContent = 'Server connection error';
+                errorBox.style.display = 'block';
+            }
+        });
+
+        document.getElementById('link-to-register').addEventListener('click', (e) => {
+            e.preventDefault();
+            toggleAuth();
+        });
+        document.getElementById('link-to-login').addEventListener('click', (e) => {
+            e.preventDefault();
+            toggleAuth();
+        });
+    </script>
+</body>
+</html>

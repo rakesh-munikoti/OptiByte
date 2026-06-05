@@ -2,14 +2,14 @@
    OptiByte Testing Suite (test.js)
    ========================================================================== */
 
-import { countTokens } from './tokenizer.js';
+import { countTokens } from './services/tokenizer.js';
 import { 
     cleanFormatting, 
     applySmartBrevity, 
     applyOBUPUltra, 
     applyDisemvoweling, 
     compressText 
-} from './compressor.js';
+} from './services/compressor.js';
 
 // Simple assertion helper
 let testsFailed = 0;

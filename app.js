@@ -2,8 +2,8 @@
    OptiByte Central Orchestrator & Controller (app.js)
    ========================================================================== */
 
-import { countTokens, registerOnLoad } from './tokenizer.js';
-import { compressText, calculateSemanticFidelity } from './compressor.js';
+import { countTokens, registerOnLoad } from './services/tokenizer.js';
+import { compressText, calculateSemanticFidelity } from './services/compressor.js';
 
 const BACKEND_URL = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
 let isBackendActive = false;
@@ -394,7 +394,7 @@ async function handleUploadedFile(file) {
             
             updateLoaderProgress("Converting Document", "Extracting text and structure...", 50);
             
-            const response = await fetch(`${BACKEND_URL}/api/convert`, {
+            const response = await fetch(`${BACKEND_URL}/api/upload`, {
                 method: 'POST',
                 body: formData
             });

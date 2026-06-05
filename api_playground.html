@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Playground - OptiByte Enterprise</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .playground-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        @media (max-width: 992px) {
+            .playground-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .play-card {
+            background: var(--bg-card);
+            border: var(--brutalist-border-thick);
+            padding: 30px;
+            box-shadow: var(--brutalist-shadow);
+        }
+
+        .play-card.input-card {
+            background: var(--bg-card);
+        }
+
+        .play-card.output-card {
+            background: var(--accent-cyan);
+        }
+
+        .play-title {
+            font-family: var(--font-display);
+            font-size: 24px;
+            font-weight: 900;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 700;
+            margin-bottom: 8px;
+            font-size: 13px;
+            text-transform: uppercase;
+        }
+
+        .input-text, .input-textarea {
+            width: 100%;
+            padding: 12px 15px;
+            font-family: var(--font-mono);
+            font-size: 13.5px;
+            border: var(--brutalist-border);
+            background: var(--bg-base);
+            outline: none;
+            transition: var(--transition-tactile);
+        }
+
+        .input-text:focus, .input-textarea:focus {
+            box-shadow: var(--brutalist-shadow-sm);
+            transform: translate(-2px, -2px);
+        }
+
+        .input-textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .brutalist-select {
+            width: 100%;
+            padding: 12px 15px;
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 14.5px;
+            border: var(--brutalist-border);
+            background: var(--bg-base);
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 18px;
+        }
+
+        .btn-send {
+            width: 100%;
+            padding: 15px;
+            font-family: var(--font-display);
+            font-size: 16px;
+            font-weight: 800;
+            text-transform: uppercase;
+            background: var(--accent-yellow);
+            color: #000;
+            border: var(--brutalist-border);
+            cursor: pointer;
+            transition: var(--transition-tactile);
+        }
+
+        .btn-send:hover {
+            transform: translate(-3px, -3px);
+            box-shadow: var(--brutalist-shadow);
+        }
+
+        .console-box {
+            background: #000;
+            color: #0F0;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            padding: 15px;
+            border: var(--brutalist-border);
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 250px;
+        }
+
+        .metrics-strip {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .metric-box {
+            background: var(--bg-card);
+            border: var(--brutalist-border);
+            padding: 12px;
+            text-align: center;
+            box-shadow: var(--brutalist-shadow-sm);
+        }
+
+        .metric-title {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            margin-bottom: 5px;
+        }
+
+        .metric-value {
+            font-family: var(--font-mono);
+            font-size: 18px;
+            font-weight: 950;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="brand">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
+                        <path d="M12 12v9" />
+                        <path d="m8 17 4 4 4-4" />
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <h1 class="title-main">OptiByte</h1>
+                    <span class="tagline">Developer API Playground</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <a href="/dashboard.html" class="btn-history-toggle" style="text-decoration: none; display: flex; align-items: center; gap: 8px;">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="9"></rect>
+                        <rect x="14" y="3" width="7" height="5"></rect>
+                        <rect x="14" y="12" width="7" height="9"></rect>
+                        <rect x="3" y="16" width="7" height="5"></rect>
+                    </svg>
+                    <span>Dashboard</span>
+                </a>
+            </div>
+        </header>
+
+        <main class="app-main" style="padding-bottom: 60px;">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="font-family: var(--font-display); font-size: 38px; font-weight: 900; text-transform: uppercase;">API Key Tester & Sandbox</h1>
+                <p style="font-size: 15px; font-weight: 600; max-width: 600px; margin: 5px auto 0;">Test HTTP requests programmatically using your generated API credentials directly from this interactive local console.</p>
+            </div>
+
+            <div class="playground-grid">
+                <!-- Request panel -->
+                <div class="play-card input-card">
+                    <h2 class="play-title">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"></polyline><polyline points="16 17 22 17 22 11"></polyline></svg>
+                        Construct API Request
+                    </h2>
+
+                    <div class="form-group">
+                        <label for="api-key">API Credential (API Key)</label>
+                        <input type="text" id="api-key" class="input-text" placeholder="ob_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" value="">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="prompt-text">Prompt / Document Content</label>
+                        <textarea id="prompt-text" class="input-textarea" placeholder="Type or paste your LLM prompt / document here to compress..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="opt-level">Optimization Level</label>
+                        <select id="opt-level" class="brutalist-select">
+                            <option value="1">Level 1 - Structural formatting clean & table shrink</option>
+                            <option value="2">Level 2 - Contractions & verbose phrases removal</option>
+                            <option value="3">Level 3 - OBUP set logic & synonym mapper</option>
+                            <option value="4" selected>Level 4 - Full compression (with disemvoweling)</option>
+                        </select>
+                    </div>
+
+                    <button class="btn-send" id="btn-send-request">Send API Request</button>
+                </div>
+
+                <!-- Response panel -->
+                <div class="play-card output-card">
+                    <h2 class="play-title" style="color:#000;">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        Live Response Output
+                    </h2>
+
+                    <div class="metrics-strip">
+                        <div class="metric-box">
+                            <div class="metric-title">HTTP Status</div>
+                            <div class="metric-value" id="status-val">-</div>
+                        </div>
+                        <div class="metric-box">
+                            <div class="metric-title">Savings</div>
+                            <div class="metric-value" id="savings-val">-%</div>
+                        </div>
+                        <div class="metric-box">
+                            <div class="metric-title">Token Ratio</div>
+                            <div class="metric-value" id="ratio-val">-</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label style="color:#000;">Request Details</label>
+                        <div class="console-box" id="request-console">Waiting to send request...</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label style="color:#000;">Response Payload</label>
+                        <div class="console-box" id="response-console" style="color: #0FF;">Waiting to receive response...</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Prefill API Key if logged in
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('ob_token');
+            if (token) {
+                // Fetch user data to extract key
+                fetch('/api/auth/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success && data.user.apiKey) {
+                        document.getElementById('api-key').value = data.user.apiKey;
+                    }
+                })
+                .catch(e => console.error('Error auto-fetching api key', e));
+            }
+        });
+
+        async function sendRequest() {
+            const apiKey = document.getElementById('api-key').value.trim();
+            const text = document.getElementById('prompt-text').value;
+            const level = parseInt(document.getElementById('opt-level').value);
+
+            if (!apiKey) {
+                alert('Please enter your API Credential key.');
+                return;
+            }
+            if (!text) {
+                alert('Please enter some prompt text to optimize.');
+                return;
+            }
+
+            const requestConsole = document.getElementById('request-console');
+            const responseConsole = document.getElementById('response-console');
+            
+            const url = '/api/optimize';
+            const headers = {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            };
+            const body = {
+                text: text,
+                level: level,
+                options: {
+                    contractions: true,
+                    math: true,
+                    synonyms: true,
+                    tables: true,
+                    whitespace: true
+                }
+            };
+
+            // Display request info
+            requestConsole.textContent = `POST ${url}\n` +
+                `Headers:\n  Authorization: Bearer ${apiKey.substring(0,6)}...\n  Content-Type: application/json\n\n` +
+                `Body:\n${JSON.stringify(body, null, 2)}`;
+
+            responseConsole.textContent = 'Sending request to backend...';
+            document.getElementById('status-val').textContent = '...';
+            document.getElementById('status-val').style.color = '#000';
+            document.getElementById('savings-val').textContent = '-%';
+            document.getElementById('ratio-val').textContent = '-';
+
+            try {
+                const startTime = performance.now();
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(body)
+                });
+                const duration = Math.round(performance.now() - startTime);
+
+                const data = await response.json();
+                
+                // Set Status
+                const statusVal = document.getElementById('status-val');
+                statusVal.textContent = `${response.status}`;
+                if (response.ok) {
+                    statusVal.style.color = 'green';
+                } else {
+                    statusVal.style.color = 'red';
+                }
+
+                // Display response payload
+                responseConsole.textContent = `Response Time: ${duration}ms\n` +
+                    `Status: ${response.status} ${response.statusText}\n\n` +
+                    `JSON:\n${JSON.stringify(data, null, 2)}`;
+
+                if (data.success && data.analytics) {
+                    const original = data.analytics.originalTokens || 0;
+                    const optimized = data.analytics.optimizedTokens || 0;
+                    const savings = data.analytics.savingsPercentage || 0;
+
+                    document.getElementById('savings-val').textContent = `${Math.round(savings)}%`;
+                    document.getElementById('ratio-val').textContent = `${optimized}/${original}`;
+                }
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('status-val').textContent = 'ERR';
+                document.getElementById('status-val').style.color = 'red';
+                responseConsole.textContent = `Error connecting to API server:\n${err.message}`;
+            }
+        }
+
+        document.getElementById('btn-send-request').addEventListener('click', sendRequest);
+    </script>
+</body>
+</html>

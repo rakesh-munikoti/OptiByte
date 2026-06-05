@@ -37,6 +37,9 @@ RUN npm ci --only=production
 # Copy application source code
 COPY . .
 
+# Generate Prisma Client for container environment
+RUN npx prisma generate
+
 # Ensure temp directory exists and is writable for uploads
 RUN mkdir -p temp && chmod 777 temp
 
