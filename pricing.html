@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OptiByte - Pricing & Monetization Plans</title>
+    <!-- Google Fonts for premium typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.json">
+    <style>
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-top: 20px;
+            margin-bottom: 40px;
+        }
+        @media (max-width: 900px) {
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .pricing-card {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 480px;
+            position: relative;
+        }
+        .pricing-card.popular {
+            border-color: var(--accent-violet);
+            box-shadow: 6px 6px 0px 0px var(--accent-violet);
+        }
+        .pricing-card.popular:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 8px 8px 0px 0px var(--accent-violet);
+        }
+        .popular-tag {
+            position: absolute;
+            top: -15px;
+            right: 20px;
+            background: var(--accent-pink);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 4px 10px;
+            border: var(--brutalist-border-thin);
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .plan-header {
+            margin-bottom: 20px;
+        }
+        .plan-title {
+            font-family: var(--font-display);
+            font-size: 24px;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: var(--text-main);
+            margin-bottom: 5px;
+        }
+        .plan-price {
+            font-family: var(--font-mono);
+            font-size: 38px;
+            font-weight: 900;
+            color: var(--text-main);
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+        }
+        .plan-price span {
+            font-size: 14px;
+            color: var(--text-dim);
+            font-weight: 700;
+        }
+        .plan-features {
+            list-style: none;
+            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            text-align: left;
+        }
+        .plan-features li {
+            font-size: 13.5px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .plan-features li::before {
+            content: "✓";
+            color: var(--accent-green);
+            font-weight: 900;
+            font-size: 15px;
+        }
+        .pricing-btn {
+            width: 100%;
+            height: 48px;
+            border: var(--brutalist-border);
+            font-family: var(--font-display);
+            font-size: 14px;
+            font-weight: 900;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: var(--brutalist-shadow-sm);
+            transition: var(--transition-tactile);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+        }
+        .pricing-btn:active {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0px var(--border-color);
+        }
+        .pricing-btn.btn-free {
+            background: #fff;
+            color: #000;
+        }
+        .pricing-btn.btn-free:hover {
+            background: #FFFDF0;
+            transform: translate(-2px, -2px);
+            box-shadow: 4px 4px 0px var(--border-color);
+        }
+        .roi-calculator {
+            margin-bottom: 40px;
+            text-align: center;
+        }
+        .roi-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+            align-items: center;
+        }
+        @media (max-width: 768px) {
+            .roi-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .roi-display {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .roi-box {
+            border: var(--brutalist-border-thin);
+            box-shadow: var(--brutalist-shadow-sm);
+            background: #fff;
+            padding: 15px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .roi-box strong {
+            font-family: var(--font-mono);
+            font-size: 28px;
+            font-weight: 900;
+            display: block;
+        }
+        .roi-box span {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: var(--text-dim);
+        }
+        .slider-wrap {
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .roi-slider {
+            width: 100%;
+            height: 12px;
+            background: #EAEAE2;
+            border: var(--brutalist-border-thin);
+            border-radius: 6px;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+        .roi-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            background: var(--accent-yellow);
+            border: var(--brutalist-border-thin);
+            border-radius: 4px;
+            box-shadow: 2px 2px 0px #000;
+            transition: var(--transition-tactile);
+        }
+        .roi-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+        }
+        .key-provision-success {
+            background: var(--accent-green);
+            border: var(--brutalist-border-thick);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: var(--brutalist-shadow);
+            color: #000;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+        .key-display {
+            font-family: var(--font-mono);
+            font-size: 18px;
+            font-weight: 900;
+            background: #fff;
+            border: var(--brutalist-border-thin);
+            padding: 12px 18px;
+            border-radius: 4px;
+            margin: 15px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--brutalist-shadow-sm);
+        }
+        .copy-key-btn {
+            background: var(--accent-yellow);
+            border: var(--brutalist-border-thin);
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-family: var(--font-display);
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 2px 2px 0px #000;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- HEADER -->
+        <header class="app-header">
+            <div class="brand">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
+                        <path d="M12 12v9" />
+                        <path d="m8 17 4 4 4-4" />
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <h1 class="title-main">OptiByte</h1>
+                    <span class="tagline">OptiByte Ultra Protocol (OBUP) • 100% Lossless</span>
+                </div>
+            </div>
+            <div class="header-actions" style="display: flex; align-items: center; gap: 12px;">
+                <a href="/index.html" class="btn-history-toggle" style="text-decoration: none; display: flex; align-items: center; gap: 8px; font-weight: 800; text-transform: uppercase; font-size: 11.5px; border: var(--brutalist-border-thin); padding: 8px 16px; border-radius: 4px; background: #fff; color: #000; box-shadow: var(--brutalist-shadow-sm);">
+                    <span>Home Workspace</span>
+                </a>
+            </div>
+        </header>
+
+        <!-- MAIN LAYOUT -->
+        <main class="app-main">
+            <!-- Key Provision Success Alert (Visible after redirect) -->
+            <div id="success-banner" class="key-provision-success" style="display: none;">
+                <h2 style="font-family: var(--font-display); font-weight: 900; text-transform: uppercase; font-size: 22px;">✓ Payment Completed Successfully!</h2>
+                <p style="font-weight: 700; margin-top: 5px;">Your subscription is now active. Here is your unique programmatic API Key:</p>
+                <div class="key-display">
+                    <span id="generated-api-key">ob_loading_key_placeholder...</span>
+                    <button class="copy-key-btn" id="copy-key-btn">Copy Key</button>
+                </div>
+                <p style="font-size: 11.5px; font-weight: 800; text-transform: uppercase; color: rgba(0,0,0,0.7);">⚠️ Important: Copy this key and save it securely. It will not be shown again for security reasons.</p>
+            </div>
+
+            <!-- ROI CALCULATOR -->
+            <section class="glass-card roi-calculator">
+                <h2 class="card-title">Token Savings ROI Calculator</h2>
+                <div class="roi-grid">
+                    <div class="slider-wrap">
+                        <label for="calc-tokens-slider" style="font-weight: 800; font-size: 14px; text-transform: uppercase;">Daily Prompts Token Consumption</label>
+                        <input type="range" id="calc-tokens-slider" class="roi-slider" min="10000" max="2000000" step="10000" value="100000" aria-label="Daily prompt tokens consumption slider">
+                        <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 13px; font-weight: 700; margin-top: 5px;">
+                            <span>10K tokens</span>
+                            <span id="slider-tokens-readout">100,000 tokens / day</span>
+                            <span>2M tokens</span>
+                        </div>
+                    </div>
+                    <div class="roi-display">
+                        <div class="roi-grid" style="grid-template-columns: 1fr 1fr; gap: 15px; margin: 0;">
+                            <div class="roi-box">
+                                <span class="text-pink">Standard Monthly Cost</span>
+                                <strong id="roi-standard-cost">$0.00</strong>
+                                <span>Using Claude 3.5 Sonnet</span>
+                            </div>
+                            <div class="roi-box" style="border-color: var(--accent-green);">
+                                <span class="text-violet">OptiByte Cost</span>
+                                <strong id="roi-optibyte-cost">$0.00</strong>
+                                <span>With OBUP compression</span>
+                            </div>
+                        </div>
+                        <div class="roi-box" style="background: var(--accent-yellow); border-color: #000;">
+                            <span>Your Monthly Net Savings</span>
+                            <strong id="roi-monthly-savings" style="font-size: 32px;">$0.00</strong>
+                            <span>Savings up to 60% of LLM cost</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PRICING CARDS GRID -->
+            <section class="pricing-grid">
+                <!-- Free Plan -->
+                <div class="glass-card pricing-card">
+                    <div class="plan-header">
+                        <h3 class="plan-title">Free Workspace</h3>
+                        <div class="plan-price">$0 <span>/ forever</span></div>
+                    </div>
+                    <ul class="plan-features">
+                        <li>5,000 prompt tokens per day</li>
+                        <li>Clean, Brevity, and Ultra levels</li>
+                        <li>100% Client-side browser only</li>
+                        <li>Document uploads (DOCX, TXT, MD)</li>
+                        <li>Anonymized feedback support</li>
+                    </ul>
+                    <a href="/index.html" class="pricing-btn btn-free">Start Squeezing</a>
+                </div>
+
+                <!-- Pro Plan -->
+                <div class="glass-card pricing-card popular">
+                    <div class="popular-tag">Most Popular</div>
+                    <div class="plan-header">
+                        <h3 class="plan-title">OptiByte Pro</h3>
+                        <div class="plan-price">$19 <span>/ month</span></div>
+                    </div>
+                    <ul class="plan-features">
+                        <li>500,000 tokens per day limit</li>
+                        <li>Programmatic REST API endpoint</li>
+                        <li>All 4 levels including Quantum</li>
+                        <li>Code-Aware &amp; Multi-language modes</li>
+                        <li>Prioritized conversion speeds</li>
+                    </ul>
+                    <button class="pricing-btn btn-primary" onclick="initiateCheckout('pro')">Get Pro Access</button>
+                </div>
+
+                <!-- Enterprise Plan -->
+                <div class="glass-card pricing-card">
+                    <div class="plan-header">
+                        <h3 class="plan-title">Enterprise</h3>
+                        <div class="plan-price">$199 <span>/ month</span></div>
+                    </div>
+                    <ul class="plan-features">
+                        <li>10,000,000 tokens per day limit</li>
+                        <li>Unlimited custom glossary mappings</li>
+                        <li>Custom SLA &amp; dedicated support</li>
+                        <li>Multi-key team billing</li>
+                        <li>Early access to OBUP v6 spec</li>
+                    </ul>
+                    <button class="pricing-btn btn-glow" onclick="initiateCheckout('enterprise')">Deploy Enterprise</button>
+                </div>
+            </section>
+        </main>
+
+        <!-- FOOTER -->
+        <footer class="app-footer" style="display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 20px 0; border-top: 1px solid rgba(0,0,0,0.1); margin-top: 30px;">
+            <div class="footer-privacy-text" style="display: flex; align-items: center; gap: 8px; justify-content: center;">
+                <span class="shield-icon">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                </span>
+                <span><strong>Secure token optimization.</strong> Programmatic APIs process text in secure RAM only. Data is never cached or stored.</span>
+            </div>
+            <div class="footer-links" style="display: flex; gap: 15px; font-size: 11.5px; opacity: 0.8; justify-content: center;">
+                <a href="/privacy.html" style="color: var(--text-dim); text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='var(--accent-violet-light)'" onmouseout="this.style.color='var(--text-dim)'">Privacy Policy</a>
+                <span style="color: rgba(0, 0, 0, 0.2);">|</span>
+                <a href="/terms.html" style="color: var(--text-dim); text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='var(--accent-violet-light)'" onmouseout="this.style.color='var(--text-dim)'">Terms of Service</a>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Setup backend URL relative or localhost fallback
+        const BACKEND_URL = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+
+        // ROI Calculator Logic
+        const tokensSlider = document.getElementById('calc-tokens-slider');
+        const readout = document.getElementById('slider-tokens-readout');
+        const standardCostVal = document.getElementById('roi-standard-cost');
+        const optibyteCostVal = document.getElementById('roi-optibyte-cost');
+        const monthlySavingsVal = document.getElementById('roi-monthly-savings');
+
+        function updateROICalculator() {
+            const dailyTokens = parseInt(tokensSlider.value);
+            readout.textContent = dailyTokens.toLocaleString() + ' tokens / day';
+            
+            // Standard models average input cost: $3.00 per 1M tokens (Claude 3.5 Sonnet / GPT-4o blend)
+            // Monthly prompt cost calculation
+            const monthlyStandard = (dailyTokens * 30 * 3.00) / 1000000;
+            
+            // OptiByte averages 55% token volume reduction
+            // Compressed prompts cost calculation
+            const monthlyOptiByte = (dailyTokens * 0.45 * 30 * 3.00) / 1000000;
+            const savings = Math.max(0, monthlyStandard - monthlyOptiByte);
+
+            standardCostVal.textContent = '$' + monthlyStandard.toFixed(2);
+            optibyteCostVal.textContent = '$' + monthlyOptiByte.toFixed(2);
+            monthlySavingsVal.textContent = '$' + savings.toFixed(2);
+        }
+
+        tokensSlider.addEventListener('input', updateROICalculator);
+        updateROICalculator();
+
+        // Initiate checkout session and redirect to Stripe Checkout
+        async function initiateCheckout(plan) {
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/checkout`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ plan })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Could not connect to payment gateway.');
+                }
+                
+                const result = await response.json();
+                if (result.success && result.url) {
+                    window.location.href = result.url;
+                } else {
+                    alert(result.error || 'Failed to initialize payment.');
+                }
+            } catch (err) {
+                alert('Checkout failed: ' + err.message);
+            }
+        }
+
+        // On load check if success query params exist to fetch generated key
+        async function checkPaymentStatus() {
+            const params = new URLSearchParams(window.location.search);
+            const success = params.get('success');
+            const sessionId = params.get('session_id');
+
+            if (success === 'true' && sessionId) {
+                const successBanner = document.getElementById('success-banner');
+                const keySpan = document.getElementById('generated-api-key');
+                const copyBtn = document.getElementById('copy-key-btn');
+                
+                successBanner.style.display = 'block';
+                successBanner.scrollIntoView({ behavior: 'smooth' });
+
+                try {
+                    const response = await fetch(`${BACKEND_URL}/api/retrieve-key?session_id=${sessionId}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success && data.apiKey) {
+                            keySpan.textContent = data.apiKey;
+                            
+                            // Setup key copy logic
+                            copyBtn.onclick = () => {
+                                navigator.clipboard.writeText(data.apiKey).then(() => {
+                                    copyBtn.textContent = 'Copied!';
+                                    copyBtn.style.background = 'var(--accent-green)';
+                                    setTimeout(() => {
+                                        copyBtn.textContent = 'Copy Key';
+                                        copyBtn.style.background = 'var(--accent-yellow)';
+                                    }, 2000);
+                                });
+                            };
+                        } else {
+                            keySpan.textContent = 'Error: Key already retrieved or session expired.';
+                        }
+                    } else {
+                        keySpan.textContent = 'Error: Could not retrieve API key. Contact support.';
+                    }
+                } catch (err) {
+                    keySpan.textContent = 'Error: ' + err.message;
+                }
+            } else if (success === 'false') {
+                alert('Subscription checkout cancelled. You can retry anytime!');
+            }
+        }
+
+        window.onload = checkPaymentStatus;
+    </script>
+</body>
+</html>

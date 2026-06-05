@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import multer from 'multer';
@@ -8,7 +9,12 @@ import { fileURLToPath } from 'url';
 import helmet from 'helmet';
 import { rateLimit } from 'express-rate-limit';
 import compression from 'compression';
+import Stripe from 'stripe';
 import { logger } from './logger.js';
+import { compressText } from './compressor.js';
+import { countTokens } from './tokenizer.js';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,10 +22,73 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Enable compression, CORS, and JSON parsing
+// Enable trust proxy for express-rate-limit behind reverse proxies (Render)
+app.set('trust proxy', 1);
+
+// Enable compression
 app.use(compression());
-app.use(cors());
+
+// Stripe Webhook Endpoint (requires raw request body parser)
+app.post('/api/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+    const sig = req.headers['stripe-signature'];
+    let event;
+
+    try {
+        event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET || 'whsec_placeholder');
+    } catch (err) {
+        logger.error('Stripe webhook signature verification failed', err);
+        return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    if (event.type === 'checkout.session.completed') {
+        const session = event.data.object;
+        const customerEmail = session.customer_details ? session.customer_details.email : 'unknown@domain.com';
+        
+        let plan = 'Pro';
+        let dailyLimit = 500000;
+        
+        if (session.metadata && session.metadata.plan) {
+            plan = session.metadata.plan;
+            if (plan.toLowerCase() === 'enterprise') {
+                dailyLimit = 10000000;
+            }
+        }
+
+        import('crypto').then(({ randomUUID }) => {
+            const newKey = `ob_${randomUUID().replace(/-/g, '')}`;
+            const keys = readKeys();
+            
+            keys[newKey] = {
+                plan,
+                dailyLimit,
+                usedToday: 0,
+                lastUsedDate: new Date().toISOString().split('T')[0],
+                email: customerEmail,
+                createdAt: new Date().toISOString(),
+                sessionId: session.id
+            };
+            
+            writeKeys(keys);
+            logger.info(`Successfully provisioned API key for subscription`, { email: customerEmail, plan });
+        }).catch(err => {
+            logger.error('Error generating api key on webhook success', err);
+        });
+    }
+
+    res.json({ received: true });
+});
+
 app.use(express.json());
+
+// CORS Lockdown: allow specific origins in production
+const allowedOrigin = process.env.NODE_ENV === 'production'
+    ? 'https://optibyte-ypd6.onrender.com'
+    : '*';
+
+app.use(cors({
+    origin: allowedOrigin,
+    methods: ['GET', 'POST'],
+}));
 
 // Configure Helmet with secure CSP that allows required external CDNs and Google Analytics
 app.use(
@@ -30,7 +99,7 @@ app.use(
                 scriptSrc: [
                     "'self'",
                     "'unsafe-inline'",
-                    "'unsafe-eval'", // js-tiktoken/mammoth.js dynamic code requirements
+                    // Removed 'unsafe-eval' to mitigate XSS risks (Mammoth and js-tiktoken checked)
                     "https://cdnjs.cloudflare.com",
                     "https://unpkg.com",
                     "https://www.googletagmanager.com"
@@ -54,6 +123,17 @@ app.use(
         }
     })
 );
+
+// Redirect HTTP to HTTPS in production & enforce HSTS
+app.use((req, res, next) => {
+    if (req.headers['x-forwarded-proto'] !== 'https' && process.env.NODE_ENV === 'production') {
+        return res.redirect(301, `https://${req.headers.host}${req.url}`);
+    }
+    if (process.env.NODE_ENV === 'production') {
+        res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+    }
+    next();
+});
 
 // Global rate limiting: maximum of 150 requests per 15 minutes per IP
 const globalLimiter = rateLimit({
@@ -104,7 +184,7 @@ app.use((req, res, next) => {
         urlLower.includes('.git') ||
         urlLower.includes('.env')
     ) {
-        return res.status(403).send('Access Denied');
+        return res.status(403).json({ success: false, error: 'Access Denied', code: 'ACCESS_DENIED' });
     }
     next();
 });
@@ -117,6 +197,41 @@ const tempDir = path.join(__dirname, 'temp');
 if (!fs.existsSync(tempDir)) {
     fs.mkdirSync(tempDir);
 }
+
+// Automatically sweep temp files older than 1 hour every 30 minutes
+setInterval(() => {
+    logger.info('Running background clean sweep for stale temp files...');
+    const now = Date.now();
+    const ageThresholdMs = 60 * 60 * 1000; // 1 hour
+    
+    fs.readdir(tempDir, (err, files) => {
+        if (err) {
+            logger.error('Error reading temp directory during clean sweep', err);
+            return;
+        }
+        
+        files.forEach(file => {
+            const filePath = path.join(tempDir, file);
+            fs.stat(filePath, (statErr, stats) => {
+                if (statErr) {
+                    logger.error(`Error statting file: ${filePath}`, statErr);
+                    return;
+                }
+                
+                const fileAgeMs = now - stats.mtimeMs;
+                if (fileAgeMs > ageThresholdMs) {
+                    fs.unlink(filePath, (unlinkErr) => {
+                        if (unlinkErr) {
+                            logger.error(`Could not delete stale temp file: ${filePath}`, unlinkErr);
+                        } else {
+                            logger.info(`Deleted stale temp file: ${file}`);
+                        }
+                    });
+                }
+            });
+        });
+    });
+}, 30 * 60 * 1000); // 30 minutes
 
 // Filename sanitizer to block command injection patterns and path traversal
 function sanitizeFilename(filename) {
@@ -142,7 +257,24 @@ const storage = multer.diskStorage({
 
 const upload = multer({
     storage: storage,
-    limits: { fileSize: 20 * 1024 * 1024 } // 20MB limit
+    limits: { fileSize: 20 * 1024 * 1024 }, // 20MB limit
+    fileFilter: (req, file, cb) => {
+        const allowedMimeTypes = [
+            'application/pdf', 
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'text/plain', 'text/markdown', 'text/html', 'text/csv', 'application/json'
+        ];
+        const allowedExtensions = ['.pdf', '.docx', '.xlsx', '.xls', '.pptx', '.ppt', '.txt', '.md', '.html', '.csv', '.json'];
+        const ext = path.extname(file.originalname).toLowerCase();
+        
+        if (allowedMimeTypes.includes(file.mimetype) || allowedExtensions.includes(ext)) {
+            cb(null, true);
+        } else {
+            cb(new Error('Unsupported file type'), false);
+        }
+    }
 });
 
 // Cached python environment status to avoid spawning shell processes on every health check
@@ -206,29 +338,57 @@ function getPythonCommand(callback) {
     });
 }
 
+// Helper to calculate total size of temp folder in bytes (cross-platform, non-blocking)
+function getTempFolderSize(callback) {
+    fs.readdir(tempDir, (err, files) => {
+        if (err) return callback(err, 0);
+        let totalSize = 0;
+        let pending = files.length;
+        if (pending === 0) return callback(null, 0);
+        
+        files.forEach(file => {
+            fs.stat(path.join(tempDir, file), (statErr, stats) => {
+                if (!statErr) {
+                    totalSize += stats.size;
+                }
+                pending--;
+                if (pending === 0) {
+                    callback(null, totalSize);
+                }
+            });
+        });
+    });
+}
+
 // Ping endpoint to verify server is active and check for markitdown package
 app.get('/api/health', (req, res) => {
     checkPythonEnvironment((status) => {
-        if (!status.cmd) {
-            return res.json({
-                status: 'warning',
+        const memory = process.memoryUsage();
+        const memoryLimit = 512 * 1024 * 1024; // 512 MB threshold
+        const memoryStatus = memory.rss > memoryLimit ? 'high' : 'ok';
+        
+        getTempFolderSize((err, tempSize) => {
+            const tempLimit = 500 * 1024 * 1024; // 500 MB threshold
+            const diskStatus = tempSize > tempLimit ? 'full' : 'ok';
+            
+            const isHealthy = !err && status.hasMarkItDown && memoryStatus === 'ok' && diskStatus === 'ok';
+            
+            res.json({
+                status: isHealthy ? 'ok' : 'warning',
                 message: status.message,
-                hasMarkItDown: false
+                hasMarkItDown: status.hasMarkItDown,
+                runMethod: status.runMethod,
+                diagnostics: {
+                    memory: {
+                        rss: `${Math.round(memory.rss / 1024 / 1024)} MB`,
+                        status: memoryStatus
+                    },
+                    tempFolder: {
+                        size: `${Math.round(tempSize / 1024 / 1024)} MB`,
+                        status: diskStatus
+                    }
+                }
             });
-        }
-        if (!status.hasMarkItDown) {
-            return res.json({
-                status: 'warning',
-                message: status.message,
-                error: 'Please run: pip install markitdown',
-                hasMarkItDown: false
-            });
-        }
-        return res.json({
-            status: 'ok',
-            message: status.message,
-            hasMarkItDown: true,
-            runMethod: status.runMethod
         });
     });
 });
@@ -304,6 +464,190 @@ app.post('/api/convert', convertLimiter, upload.single('file'), (req, res) => {
     });
 });
 
+// Keys database management helpers
+const keysFilePath = path.join(__dirname, 'keys.json');
+
+function readKeys() {
+    try {
+        if (fs.existsSync(keysFilePath)) {
+            const raw = fs.readFileSync(keysFilePath, 'utf8');
+            return JSON.parse(raw);
+        }
+    } catch (err) {
+        logger.error('Error reading API keys file', err);
+    }
+    return {};
+}
+
+function writeKeys(keys) {
+    try {
+        fs.writeFileSync(keysFilePath, JSON.stringify(keys, null, 2), 'utf8');
+    } catch (err) {
+        logger.error('Error writing API keys file', err);
+    }
+}
+
+// API Key Validation Middleware
+const authenticateApiKey = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({
+            success: false,
+            error: 'Unauthorized. API key missing or format invalid (Bearer <key>).',
+            code: 'UNAUTHORIZED'
+        });
+    }
+
+    const key = authHeader.substring(7).trim();
+    const keys = readKeys();
+
+    if (!keys[key]) {
+        return res.status(403).json({
+            success: false,
+            error: 'Forbidden. Invalid API key.',
+            code: 'INVALID_API_KEY'
+        });
+    }
+
+    req.apiKey = key;
+    req.apiUser = keys[key];
+    next();
+};
+
+// Programmatic optimization API route
+app.post('/api/optimize', authenticateApiKey, (req, res) => {
+    const { text, level, rules } = req.body;
+
+    if (!text || typeof text !== 'string') {
+        return res.status(400).json({
+            success: false,
+            error: 'Input text is missing or invalid.',
+            code: 'INVALID_INPUT_TEXT'
+        });
+    }
+
+    const activeLevel = parseInt(level) || 3;
+    const activeRules = rules || {};
+
+    const inputTokens = countTokens(text);
+    const dateStr = new Date().toISOString().split('T')[0];
+
+    const user = req.apiUser;
+    
+    // Reset daily token usage if date has changed
+    if (user.lastUsedDate !== dateStr) {
+        user.usedToday = 0;
+        user.lastUsedDate = dateStr;
+    }
+
+    if (user.usedToday + inputTokens > user.dailyLimit) {
+        return res.status(429).json({
+            success: false,
+            error: `Rate limit exceeded. Plan: ${user.plan}. Daily limit: ${user.dailyLimit} tokens. Used today: ${user.usedToday} tokens. Requested: ${inputTokens} tokens.`,
+            code: 'DAILY_LIMIT_EXCEEDED'
+        });
+    }
+
+    // Process compression
+    const compressedText = compressText(text, activeLevel, activeRules);
+    const outputTokens = countTokens(compressedText);
+    const savedTokens = Math.max(0, inputTokens - outputTokens);
+    const savingsPercent = inputTokens > 0 ? Math.round((savedTokens / inputTokens) * 100) : 0;
+
+    // Update usage metrics
+    user.usedToday += inputTokens;
+    const keys = readKeys();
+    keys[req.apiKey] = user;
+    writeKeys(keys);
+
+    res.json({
+        success: true,
+        originalTokens: inputTokens,
+        compressedTokens: outputTokens,
+        savedTokens,
+        savingsPercent,
+        compressedText
+    });
+});
+
+// Config endpoint for client-side environment variables (e.g. GA ID)
+app.get('/api/config', (req, res) => {
+    res.json({
+        gaTrackingId: process.env.GA_TRACKING_ID || 'G-XXXXXXXXXX'
+    });
+});
+
+// Create Stripe Checkout Session endpoint
+app.post('/api/checkout', (req, res) => {
+    const { plan } = req.body;
+    
+    let planName = 'Pro';
+    let priceAmount = 1900; // $19.00
+    
+    if (plan && plan.toLowerCase() === 'enterprise') {
+        planName = 'Enterprise';
+        priceAmount = 19900; // $199.00
+    }
+
+    stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [{
+            price_data: {
+                currency: 'usd',
+                product_data: {
+                    name: `OptiByte ${planName} Plan`,
+                    description: `Lossless Prompt Token Compressor API (${planName} tier)`,
+                },
+                unit_amount: priceAmount,
+                recurring: {
+                    interval: 'month',
+                },
+            },
+            quantity: 1,
+        }],
+        mode: 'subscription',
+        success_url: `${req.protocol}://${req.get('host')}/pricing.html?session_id={CHECKOUT_SESSION_ID}&success=true`,
+        cancel_url: `${req.protocol}://${req.get('host')}/pricing.html?success=false`,
+        metadata: {
+            plan: planName
+        }
+    }).then(session => {
+        res.json({ success: true, url: session.url });
+    }).catch(err => {
+        logger.error('Error creating Stripe checkout session', err);
+        res.status(500).json({ success: false, error: 'Failed to initialize payment gateway.' });
+    });
+});
+
+// Securely retrieve the newly generated API key after Stripe redirect
+app.get('/api/retrieve-key', (req, res) => {
+    const { session_id } = req.query;
+    if (!session_id) {
+        return res.status(400).json({ success: false, error: 'Session ID is required.' });
+    }
+
+    const keys = readKeys();
+    const match = Object.entries(keys).find(([k, val]) => val.sessionId === session_id);
+
+    if (!match) {
+        return res.status(404).json({ success: false, error: 'API key not found for this checkout session.' });
+    }
+
+    const [apiKey, data] = match;
+
+    // Clear sessionId reference so the key cannot be fetched again via this endpoint
+    data.sessionId = undefined;
+    keys[apiKey] = data;
+    writeKeys(keys);
+
+    res.json({
+        success: true,
+        apiKey,
+        plan: data.plan,
+        dailyLimit: data.dailyLimit
+    });
+});
+
 // Setup feedback directory
 const feedbackDir = path.join(__dirname, 'feedback');
 
@@ -343,10 +687,18 @@ app.post('/api/feedback', feedbackLimiter, (req, res) => {
             }
         }
 
-        // Build new feedback entry (purely anonymous)
+        // Build new feedback entry (purely anonymous), sanitizing message to prevent HTML/XSS injection
+        const sanitizedMessage = message.trim()
+            .substring(0, 5000)
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#x27;')
+            .replace(/\//g, '&#x2F;');
+
         const newFeedback = {
             rating: parsedRating,
-            message: message.trim().substring(0, 5000), // Cap length at 5000 chars
+            message: sanitizedMessage,
             timestamp: new Date().toISOString(),
             userAgent: req.headers['user-agent'] || 'Unknown'
         };
@@ -378,6 +730,33 @@ app.post('/api/log-error', errorLogLimiter, (req, res) => {
     });
     
     res.json({ success: true });
+});
+
+// Global error handling middleware (standardizing JSON error responses)
+app.use((err, req, res, next) => {
+    logger.error('Unhandled request error occurred', err);
+    
+    // Handle Multer upload errors specifically
+    if (err.message === 'Unsupported file type') {
+        return res.status(400).json({
+            success: false,
+            error: 'Unsupported file type. Please upload a valid document format.',
+            code: 'INVALID_FILE_TYPE'
+        });
+    }
+    if (err instanceof multer.MulterError) {
+        return res.status(400).json({
+            success: false,
+            error: `Upload error: ${err.message}`,
+            code: 'UPLOAD_ERROR'
+        });
+    }
+
+    res.status(err.status || 500).json({
+        success: false,
+        error: err.message || 'Internal Server Error',
+        code: err.code || 'INTERNAL_ERROR'
+    });
 });
 
 // Start server

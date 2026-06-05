@@ -3,7 +3,7 @@
    ========================================================================== */
 
 import { countTokens, registerOnLoad } from './tokenizer.js';
-import { compressText } from './compressor.js';
+import { compressText, calculateSemanticFidelity } from './compressor.js';
 
 const BACKEND_URL = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
 let isBackendActive = false;
@@ -37,6 +37,7 @@ const labelLvl4 = document.getElementById('label-lvl4');
 const ruleToggles = {
     whitespace: document.getElementById('toggle-whitespace'),
     tables: document.getElementById('toggle-tables'),
+    codeMode: document.getElementById('toggle-code-mode'),
     contractions: document.getElementById('toggle-contractions'),
     math: document.getElementById('toggle-math'),
     scoping: document.getElementById('toggle-scoping'),
@@ -132,6 +133,7 @@ function initializeApp() {
 
     // Check backend health status on startup
     checkBackendHealth();
+    initGoogleAnalytics();
 }
 
 if (document.readyState === 'loading') {
@@ -166,6 +168,41 @@ async function checkBackendHealth() {
         }
     } catch (err) {
         console.log('OptiByte: Local backend server offline. Operating in pure offline client-side mode (DOCX, TXT, MD).');
+    }
+}
+
+// Initialize Google Analytics dynamically from server configuration
+async function initGoogleAnalytics() {
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/config`);
+        if (response.ok) {
+            const data = await response.json();
+            const trackingId = data.gaTrackingId;
+            if (trackingId && trackingId !== 'G-XXXXXXXXXX') {
+                // Dynamically import Gtag script tag
+                const script = document.createElement('script');
+                script.async = true;
+                script.src = `https://www.googletagmanager.com/gtag/js?id=${trackingId}`;
+                document.head.appendChild(script);
+
+                window.gtag('config', trackingId);
+                console.log('OptiByte: Google Analytics initialized dynamically.');
+            }
+        }
+    } catch (err) {
+        console.warn('OptiByte: Dynamic Google Analytics initialization failed.', err);
+    }
+}
+
+// Track uploaded files to Google Analytics
+function trackUploadEvent(filename, extension, sizeInKB, parser) {
+    if (typeof window.gtag === 'function') {
+        window.gtag('event', 'upload_file', {
+            'file_name': filename,
+            'file_extension': extension,
+            'file_size_kb': parseFloat(sizeInKB),
+            'parser': parser
+        });
     }
 }
 
@@ -370,6 +407,7 @@ async function handleUploadedFile(file) {
             const result = await response.json();
             if (result.success) {
                 rawContent = result.markdown;
+                trackUploadEvent(file.name, extension, sizeInKB, 'backend_markitdown');
                 updateLoaderProgress("Optimization Engine", "Formatting data streams...", 85);
                 setTimeout(() => {
                     hideLoader();
@@ -401,6 +439,7 @@ async function handleUploadedFile(file) {
             const reader = new FileReader();
             reader.onload = function(event) {
                 rawContent = event.target.result;
+                trackUploadEvent(file.name, extension, sizeInKB, 'client_filereader');
                 updateLoaderProgress("Minifying formatting", "Structuring scopes...", 90);
                 setTimeout(() => {
                     hideLoader();
@@ -428,6 +467,8 @@ function runClientSideDocx(file) {
         mammoth.extractRawText({ arrayBuffer: arrayBuffer })
             .then((result) => {
                 rawContent = result.value;
+                const sizeInKB = (file.size / 1024).toFixed(1);
+                trackUploadEvent(file.name, 'docx', sizeInKB, 'client_mammoth');
                 updateLoaderProgress("Minifying Formatting", "Generating lossless structures...", 80);
                 setTimeout(() => {
                     hideLoader();
@@ -514,6 +555,14 @@ function setupSliderHandlers() {
         });
     });
 
+    // Binding language select change
+    const languageSelect = document.getElementById('language-select');
+    if (languageSelect) {
+        languageSelect.addEventListener('change', () => {
+            if (originalTextarea.value) updateWorkspace(originalTextarea.value);
+        });
+    }
+
     // Reset Rules Button trigger
     resetRulesBtn.addEventListener('click', () => {
         const level = parseInt(squeezeSlider.value);
@@ -524,6 +573,12 @@ function setupSliderHandlers() {
 
 // Syncs rules checklist checkboxes with slider level values
 function syncSliderUI(level) {
+    if (typeof window.gtag === 'function') {
+        window.gtag('event', 'change_level', {
+            'event_category': 'interaction',
+            'level': level
+        });
+    }
     // Update level cards active state and ARIA attributes
     document.querySelectorAll('.level-card').forEach(card => {
         const isActive = parseInt(card.dataset.level) === level;
@@ -550,6 +605,7 @@ function syncSliderUI(level) {
         ruleToggles.tables.checked = true;
         
         // Disable high-end rules visually
+        ruleToggles.codeMode.checked = false;
         ruleToggles.contractions.checked = false;
         ruleToggles.math.checked = false;
         ruleToggles.scoping.checked = false;
@@ -559,6 +615,7 @@ function syncSliderUI(level) {
         ruleToggles.disemvowel.checked = false;
         ruleToggles.decoder.checked = false;
  
+        ruleToggles.codeMode.parentElement.classList.add('disabled');
         ruleToggles.contractions.parentElement.classList.add('disabled');
         ruleToggles.math.parentElement.classList.add('disabled');
         ruleToggles.scoping.parentElement.classList.add('disabled');
@@ -574,6 +631,7 @@ function syncSliderUI(level) {
         // Level 2: Formatting + Conjunctions/Contractions Enabled
         ruleToggles.whitespace.checked = true;
         ruleToggles.tables.checked = true;
+        ruleToggles.codeMode.checked = true;
         ruleToggles.contractions.checked = true;
         ruleToggles.math.checked = true;
         
@@ -598,6 +656,7 @@ function syncSliderUI(level) {
         // Level 3: All Enabled except Level 4 specific
         ruleToggles.whitespace.checked = true;
         ruleToggles.tables.checked = true;
+        ruleToggles.codeMode.checked = true;
         ruleToggles.contractions.checked = true;
         ruleToggles.math.checked = true;
         ruleToggles.scoping.checked = true;
@@ -616,6 +675,7 @@ function syncSliderUI(level) {
         // Level 4: All Enabled EXCEPT disemvowel (which is disabled by default to prevent BPE token bloating)
         ruleToggles.whitespace.checked = true;
         ruleToggles.tables.checked = true;
+        ruleToggles.codeMode.checked = true;
         ruleToggles.contractions.checked = true;
         ruleToggles.math.checked = true;
         ruleToggles.scoping.checked = true;
@@ -686,6 +746,7 @@ function updateWorkspace(text) {
         }
         
         // 1. Gather active rule toggles
+        const languageSelectEl = document.getElementById('language-select');
         const activeRules = {
             whitespace: ruleToggles.whitespace.checked,
             tables: ruleToggles.tables.checked,
@@ -696,7 +757,8 @@ function updateWorkspace(text) {
             synonyms: ruleToggles.synonyms.checked,
             telegraphic: ruleToggles.telegraphic.checked,
             disemvowel: ruleToggles.disemvowel.checked,
-            decoder: ruleToggles.decoder.checked
+            decoder: ruleToggles.decoder.checked,
+            language: languageSelectEl ? languageSelectEl.value : 'en'
         };
 
         // 2. Perform OBUP Compression
@@ -745,6 +807,15 @@ function updateWorkspace(text) {
         if (origTokens > 0) {
             reductionPercent = Math.round(((origTokens - squeezedTokens) / origTokens) * 100);
             chatExpansion = (origTokens / squeezedTokens).toFixed(1);
+            
+            if (typeof window.gtag === 'function') {
+                window.gtag('event', 'optimize_text', {
+                    'compression_level': level,
+                    'original_tokens': origTokens,
+                    'compressed_tokens': squeezedTokens,
+                    'savings_percent': reductionPercent
+                });
+            }
         }
 
         reductionPercent = Math.max(0, reductionPercent);
@@ -809,6 +880,17 @@ function updateWorkspace(text) {
         animateKpiValue(kpiExpansion, `${chatExpansion}x`);
         animateKpiValue(kpiCost,      `$${claudeSavingsVal.toFixed(2)}`);
         animateKpiValue(kpiChars,     charsRemoved.toLocaleString());
+
+        // Calculate and update Semantic Fidelity
+        const fidelityScore = calculateSemanticFidelity(text, compressed);
+        const fidelityEl = document.getElementById('semantic-fidelity');
+        const kpiFidelity = document.getElementById('kpi-fidelity');
+        if (fidelityEl) {
+            fidelityEl.textContent = `${fidelityScore}%`;
+        }
+        if (kpiFidelity) {
+            animateKpiValue(kpiFidelity, `${fidelityScore}%`);
+        }
     } catch (err) {
         console.error("OptiByte: Error updating workspace:", err);
         if (typeof showToast === 'function') {
@@ -856,6 +938,14 @@ function setupExportHandlers() {
                 copyBtn.querySelector('.icon-copy').style.display = 'block';
                 copyBtn.querySelector('.icon-success').style.display = 'none';
             }, 2000);
+            // GA Event Tracking
+            if (typeof window.gtag === 'function') {
+                window.gtag('event', 'copy_result', {
+                    'event_category': 'export',
+                    'copy_type': 'optimized_text',
+                    'tokens': parseInt(statSqueezedTokens.textContent.replace(/,/g, '')) || 0
+                });
+            }
             // Toast
             const tokenCount = statSqueezedTokens.textContent;
             showToast('success', '✓', 'Optimized Text Copied', `${tokenCount} tokens ready to paste`);
@@ -879,6 +969,14 @@ function setupExportHandlers() {
                 copyPromptBtn.querySelector('.icon-sparkle').style.display = 'block';
                 copyPromptBtn.querySelector('.icon-success').style.display = 'none';
             }, 2000);
+            // GA Event Tracking
+            if (typeof window.gtag === 'function') {
+                window.gtag('event', 'copy_result', {
+                    'event_category': 'export',
+                    'copy_type': 'decoder_prompt',
+                    'tokens': parseInt(statSqueezedTokens.textContent.replace(/,/g, '')) || 0
+                });
+            }
             showToast('info', '✦', 'AI Prompt Copied', 'Paste directly into Claude or GPT');
             triggerSave();
         });
@@ -900,6 +998,14 @@ function setupExportHandlers() {
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            // GA Event Tracking
+            if (typeof window.gtag === 'function') {
+                window.gtag('event', 'download_file', {
+                    'event_category': 'export',
+                    'file_name': downloadName,
+                    'tokens': parseInt(statSqueezedTokens.textContent.replace(/,/g, '')) || 0
+                });
+            }
             showToast('download', '↓', 'File Downloaded', downloadName);
             triggerSave();
         }

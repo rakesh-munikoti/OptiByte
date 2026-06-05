@@ -17,3 +17,7 @@ feedback/submissions.json
 .DS_Store
 Thumbs.db
 *.log
+
+# Sensitive environments & key configs
+.env
+keys.json

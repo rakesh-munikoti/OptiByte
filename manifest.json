@@ -1,0 +1,17 @@
+{
+  "name": "OptiByte Token Optimizer",
+  "short_name": "OptiByte",
+  "description": "Premium Lossless LLM Prompt & Document Token Optimizer",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#FAF9F5",
+  "theme_color": "#A855F7",
+  "icons": [
+    {
+      "src": "/optibyte_ui_mockup.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

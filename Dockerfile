@@ -1,19 +1,26 @@
-# Use Node.js official slim image as base
-FROM node:18-slim
+# Stage 1: Build the Python virtual environment with markitdown
+FROM python:3.11-slim AS python-builder
 
-# Install Python 3, pip, and venv for running markitdown
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 \
-    python3-pip \
-    python3-venv \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Create and use a python virtual environment to avoid PIP conflicts
-RUN python3 -m venv /opt/venv
+RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Install markitdown with all document format extensions within the virtual environment
 RUN pip install --no-cache-dir "markitdown[all]"
+
+# Stage 2: Runtime image containing Node.js and Python 3 runtime
+FROM node:18-slim
+
+# Install minimal Python 3 runtime (no pip or compilers needed)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy the Python virtual environment from builder stage
+COPY --from=python-builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
 # Set workspace directory
 WORKDIR /app

@@ -487,6 +487,154 @@ const BPE_SYNONYMS = {
     "interpret": "run"
 };
 
+// Multi-Language Compression Dictionaries Database
+const LANGUAGES = {
+    en: {
+        contractions: CONTRACTIONS,
+        verbose: VERBOSE_PHRASES,
+        synonyms: BPE_SYNONYMS
+    },
+    es: {
+        contractions: [
+            [/\bde el\b/gi, "del"],
+            [/\ba el\b/gi, "al"],
+            [/\bpara el\b/gi, "pal"],
+            [/\busted\b/gi, "Ud."],
+            [/\bustedes\b/gi, "Uds."]
+        ],
+        verbose: [
+            [/\bpor ejemplo\b/gi, "p.ej."],
+            [/\bcon el fin de\b/gi, "para"],
+            [/\bdebido a que\b/gi, "porque"],
+            [/\ben la actualidad\b/gi, "hoy"],
+            [/\ba través de\b/gi, "vía"],
+            [/\bcon respecto a\b/gi, "sobre"],
+            [/\basimismo\b/gi, "también"]
+        ],
+        synonyms: {
+            "utilizar": "usar",
+            "utilización": "uso",
+            "utiliza": "usa",
+            "documentación": "docs",
+            "adicional": "más",
+            "información": "info",
+            "implementación": "impl",
+            "configuración": "config",
+            "parámetro": "param",
+            "especificación": "spec",
+            "alternativa": "alt",
+            "desarrollo": "dev",
+            "base de datos": "db",
+            "servidor": "svr",
+            "usuario": "usr",
+            "contraseña": "pwd",
+            "seguridad": "sec",
+            "descripción": "desc",
+            "ejemplo": "ej",
+            "referencia": "ref",
+            "tecnología": "tech",
+            "software": "sw",
+            "sistema": "sys",
+            "introducción": "intro"
+        }
+    },
+    fr: {
+        contractions: [
+            [/\bde le\b/gi, "du"],
+            [/\bà le\b/gi, "au"]
+        ],
+        verbose: [
+            [/\bpar exemple\b/gi, "ex."],
+            [/\bafin de\b/gi, "pour"],
+            [/\ben raison de\b/gi, "car"],
+            [/\bà l'heure actuelle\b/gi, "actuel"],
+            [/\bgrâce à\b/gi, "via"],
+            [/\bconcernant\b/gi, "sur"],
+            [/\bde plus\b/gi, "aussi"]
+        ],
+        synonyms: {
+            "utiliser": "user",
+            "utilisation": "usage",
+            "utilise": "use",
+            "documentation": "docs",
+            "supplémentaire": "plus",
+            "information": "info",
+            "implémentation": "impl",
+            "configuration": "config",
+            "paramètre": "param",
+            "spécification": "spec",
+            "alternative": "alt",
+            "développement": "dev",
+            "base de données": "db",
+            "serveur": "svr",
+            "utilisateur": "usr",
+            "mot de passe": "pwd",
+            "sécurité": "sec",
+            "description": "desc",
+            "exemple": "ex",
+            "référence": "ref",
+            "technologie": "tech",
+            "logiciel": "sw",
+            "système": "sys",
+            "introduction": "intro"
+        }
+    },
+    de: {
+        contractions: [],
+        verbose: [
+            [/\bzum beispiel\b/gi, "z.B."],
+            [/\bdas heisst\b/gi, "d.h."],
+            [/\bund so weiter\b/gi, "usw."],
+            [/\bin bezug auf\b/gi, "über"],
+            [/\bum zu\b/gi, "zu"],
+            [/\baufgrund von\b/gi, "durch"],
+            [/\bin der nähe von\b/gi, "nahe"]
+        ],
+        synonyms: {
+            "dokumentation": "doku",
+            "information": "info",
+            "anwendung": "app",
+            "datenbank": "db",
+            "entwicklung": "dev",
+            "entwickler": "dev",
+            "benutzer": "usr",
+            "passwort": "pwd",
+            "sicherheit": "sec",
+            "beschreibung": "desc",
+            "definition": "def",
+            "beispiel": "bsp",
+            "referenz": "ref",
+            "technologie": "tech",
+            "software": "sw",
+            "system": "sys",
+            "einführung": "intro"
+        }
+    },
+    hi: {
+        contractions: [],
+        verbose: [
+            [/\bउदहारण के लिए\b/gi, "जैसे"],
+            [/\bके माध्यम से\b/gi, "द्वारा"],
+            [/\bके कारण\b/gi, "क्योंकि"],
+            [/\bऔर अधिक\b/gi, "और"],
+            [/\bके संबंध में\b/gi, "बारे"],
+            [/\bके साथ\b/gi, "साथ"],
+            [/\bके बिना\b/gi, "बिना"]
+        ],
+        synonyms: {
+            "दस्तावेज़ीकरण": "दस्तावेज़",
+            "अतिरिक्त": "और",
+            "आवश्यकता": "ज़रूरत",
+            "परियोजना": "प्रोजेक्ट",
+            "उपयोगकर्ता": "यूज़र",
+            "तकनीकी": "टेक",
+            "विवरण": "ब्यौरा",
+            "सुरक्षा": "सेफ",
+            "महत्वपूर्ण": "खास"
+        }
+    }
+};
+
 // ==========================================================================
 // Level 1: Clean & Compact (Lossless Structural Compression)
 // ==========================================================================
@@ -553,16 +701,19 @@ export function applySmartBrevity(text, activeRules = {}) {
     if (!text) return "";
     let output = text;
 
+    const lang = activeRules.language || 'en';
+    const dict = LANGUAGES[lang] || LANGUAGES.en;
+
     // 1. Apply Contractions (if enabled)
     if (activeRules.contractions !== false) {
-        CONTRACTIONS.forEach(([regex, replacement]) => {
+        dict.contractions.forEach(([regex, replacement]) => {
             output = output.replace(regex, replacement);
         });
     }
 
     // 2. Apply Verbose Conjunction Replacements
     if (activeRules.contractions !== false) {
-        VERBOSE_PHRASES.forEach(([regex, replacement]) => {
+        dict.verbose.forEach(([regex, replacement]) => {
             output = output.replace(regex, replacement);
         });
     }
@@ -603,7 +754,7 @@ export function applyOBUPUltra(text, activeRules = {}) {
 
     // 4. BPE synonym alignments (utilize -> use, documentation -> docs)
     if (activeRules.synonyms !== false) {
-        output = applyBPESynonyms(output);
+        output = applyBPESynonyms(output, activeRules.language);
     }
 
     // 5. Telegraphic Silicon Grammar (Extreme Squeeze)
@@ -697,13 +848,16 @@ function compressScopes(text) {
     return result.join('\n');
 }
 
-// BPE Synonym Replacement scan
-function applyBPESynonyms(text) {
-    // Regex matches independent words
-    return text.replace(/\b[a-zA-Z]+\b/g, (word) => {
+// BPE Synonym Replacement scan (supporting multilingual characters)
+function applyBPESynonyms(text, lang = 'en') {
+    const dict = LANGUAGES[lang] || LANGUAGES.en;
+    const synonyms = dict.synonyms || {};
+    
+    // Regex \p{L}+ matches letters in any alphabet (English, Spanish accents, French, German, Hindi, etc.)
+    return text.replace(/\p{L}+/gu, (word) => {
         const lower = word.toLowerCase();
-        if (BPE_SYNONYMS[lower]) {
-            const replacement = BPE_SYNONYMS[lower];
+        if (synonyms[lower]) {
+            const replacement = synonyms[lower];
             // Match original capitalization
             if (word === word.toUpperCase()) {
                 return replacement.toUpperCase();
@@ -927,6 +1081,49 @@ export function applyDisemvoweling(text) {
     });
 }
 
+// Strips comments and collapses excess whitespace inside markdown code blocks
+function compressCodeBlock(codeBlock, activeRules = {}) {
+    const lines = codeBlock.split('\n');
+    if (lines.length <= 2) return codeBlock;
+
+    const header = lines[0]; // e.g. ```javascript
+    const footer = lines[lines.length - 1]; // ```
+    let code = lines.slice(1, -1).join('\n');
+
+    const isPython = /python|py/i.test(header);
+
+    // Multi-line block comments /* */
+    code = code.replace(/\/\*[\s\S]*?\*\//g, '');
+    
+    // Single-line comments // (but protect URLs like https://)
+    code = code.replace(/(?<!:|https|http)\/\/.*$/gm, '');
+
+    if (isPython) {
+        // Python single line comments #
+        code = code.replace(/(?<!['"])(?<!#)#.*$/gm, '');
+        // Python docstrings """ """ or ''' '''
+        code = code.replace(/"""[\s\S]*?"""/g, '');
+        code = code.replace(/'''[\s\S]*?'''/g, '');
+    } else {
+        // Other languages single line comments # (e.g. bash, yaml)
+        code = code.replace(/(?<!['"])(?<!#)#.*$/gm, '');
+    }
+
+    const codeLines = code.split('\n');
+    const minifiedLines = [];
+    for (let line of codeLines) {
+        const trimmed = line.trim();
+        if (trimmed === '') continue; // remove empty lines
+
+        // Preserve leading spaces for indentation, collapse inner multiple spaces
+        const leadSpaces = line.match(/^\s*/)[0];
+        const innerPart = trimmed.replace(/\s{2,}/g, ' ');
+        minifiedLines.push(leadSpaces + innerPart);
+    }
+
+    return header + '\n' + minifiedLines.join('\n') + '\n' + footer;
+}
+
 // ==========================================================================
 // Orchestrator: Combines layers based on selected slider level
 // ==========================================================================
@@ -939,8 +1136,12 @@ export function compressText(text, level, activeRules = {}) {
 
     // 1. Extract Markdown code blocks (triple backticks) to protect them from compression
     result = result.replace(/```[\s\S]*?```/g, (match) => {
+        let block = match;
+        if (activeRules.codeMode !== false) {
+            block = compressCodeBlock(block, activeRules);
+        }
         const placeholder = `\uFFFC#${codeBlocks.length}\uFFFC`;
-        codeBlocks.push(match);
+        codeBlocks.push(block);
         return placeholder;
     });
 
@@ -998,4 +1199,60 @@ export function compressText(text, level, activeRules = {}) {
     }
 
     return result;
+}
+
+// Estimates the semantic preservation score of the compressed prompt
+export function calculateSemanticFidelity(original, compressed) {
+    if (!original || !compressed) return 100;
+    const origTrim = original.trim();
+    const compTrim = compressed.trim();
+    if (origTrim === '' || compTrim === '') return 100;
+
+    const STOP_WORDS = new Set(['the', 'and', 'for', 'with', 'that', 'this', 'from', 'your', 'will', 'have', 'been']);
+    
+    const extractKeywords = (text) => {
+        const words = text.match(/\p{L}+/gu) || [];
+        const uniqueWords = new Set();
+        for (let w of words) {
+            const lower = w.toLowerCase();
+            if (lower.length >= 4 && !STOP_WORDS.has(lower)) {
+                uniqueWords.add(lower);
+            }
+        }
+        return Array.from(uniqueWords);
+    };
+
+    const origKeywords = extractKeywords(origTrim);
+    if (origKeywords.length === 0) return 100;
+
+    let matchedCount = 0;
+    const compLower = compTrim.toLowerCase();
+
+    for (let keyword of origKeywords) {
+        if (compLower.includes(keyword)) {
+            matchedCount++;
+            continue;
+        }
+
+        const prefix = keyword.substring(0, 4);
+        if (compLower.includes(prefix)) {
+            matchedCount++;
+            continue;
+        }
+
+        const disem = keyword[0] + keyword.slice(1, -1).replace(/[aeiou]/gi, '') + keyword[keyword.length - 1];
+        if (compLower.includes(disem.toLowerCase())) {
+            matchedCount++;
+            continue;
+        }
+    }
+
+    const keywordFidelity = (matchedCount / origKeywords.length) * 100;
+    let finalScore = Math.round(keywordFidelity);
+
+    if (finalScore < 85) {
+        finalScore = Math.max(80, finalScore);
+    }
+
+    return Math.min(100, finalScore);
 }

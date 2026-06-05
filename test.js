@@ -141,6 +141,55 @@ function runSecuritySanitizerTests() {
     assert('Double quote injection blocked', sanitizeFilename('my"file".pdf') === 'my_file_.pdf', `Got: ${sanitizeFilename('my"file".pdf')}`);
 }
 
+// 7. API Validation rules tests (mock checks)
+function runApiValidationTests() {
+    console.log('\n--- Running API Validation Tests ---');
+    
+    // Test MIME-Type and Extension validation rules
+    function mockFileFilter(filename, mimetype) {
+        const allowedMimeTypes = [
+            'application/pdf', 
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'text/plain', 'text/markdown', 'text/html', 'text/csv', 'application/json'
+        ];
+        const allowedExtensions = ['.pdf', '.docx', '.xlsx', '.xls', '.pptx', '.ppt', '.txt', '.md', '.html', '.csv', '.json'];
+        const ext = '.' + filename.split('.').pop().toLowerCase();
+        
+        return allowedMimeTypes.includes(mimetype) || allowedExtensions.includes(ext);
+    }
+
+    assert('Valid PDF file check', mockFileFilter('document.pdf', 'application/pdf') === true, 'Valid PDF rejected');
+    assert('Valid DOCX file check', mockFileFilter('report.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') === true, 'Valid DOCX rejected');
+    assert('Invalid exe extension check', mockFileFilter('virus.exe', 'application/octet-stream') === false, 'Invalid exe allowed');
+    assert('Invalid mimetype with valid ext check', mockFileFilter('valid.txt', 'application/octet-stream') === true, 'Valid txt rejected due to octet-stream mime');
+
+    // Test API Key rate limit rule mock
+    function checkRateLimit(user, inputTokens, dateStr) {
+        if (user.lastUsedDate !== dateStr) {
+            user.usedToday = 0;
+            user.lastUsedDate = dateStr;
+        }
+        if (user.usedToday + inputTokens > user.dailyLimit) {
+            return false;
+        }
+        user.usedToday += inputTokens;
+        return true;
+    }
+
+    const testUser = {
+        plan: 'Free',
+        dailyLimit: 5000,
+        usedToday: 4500,
+        lastUsedDate: '2026-06-05'
+    };
+
+    assert('Within limit API request', checkRateLimit(testUser, 400, '2026-06-05') === true, 'Request within limits rejected');
+    assert('Exceeding limit API request', checkRateLimit(testUser, 200, '2026-06-05') === false, 'Request exceeding limits allowed');
+    assert('Limit resets on next day', checkRateLimit(testUser, 200, '2026-06-06') === true, 'Limit did not reset on next day');
+}
+
 // Run All
 runTokenizerTests();
 runCompressorL1Tests();
@@ -148,6 +197,7 @@ runCompressorL2Tests();
 runCompressorL3Tests();
 runCompressorL4Tests();
 runSecuritySanitizerTests();
+runApiValidationTests();
 
 console.log('\n=======================================================');
 if (testsFailed === 0) {
