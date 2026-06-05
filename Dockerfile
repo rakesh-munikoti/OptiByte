@@ -1,11 +1,14 @@
 # Stage 1: Build the Python virtual environment with markitdown
-FROM python:3.11-slim AS python-builder
+FROM node:18-slim AS python-builder
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 \
+    python3-venv \
+    python3-pip \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-RUN python -m venv /opt/venv
+RUN python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 RUN pip install --no-cache-dir "markitdown[all]"
