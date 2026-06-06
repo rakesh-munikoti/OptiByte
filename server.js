@@ -24,8 +24,10 @@ import { exec } from 'child_process';
 import { logger } from './services/logger.js';
 import { globalLimiter } from './middlewares/rateLimiters.js';
 import { checkPythonEnvironment } from './services/pythonService.js';
+import passport from 'passport';
 import apiRoutes from './routes/api.js';
 import authRoutes from './routes/auth.js';
+import googleAuthRoutes from './routes/googleAuth.js';
 import paymentRoutes from './routes/payment.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -45,11 +47,17 @@ app.use(compression());
 // Support JSON bodies globally (DoS protection limit set to 1MB)
 app.use(express.json({ limit: '1mb' }));
 
+// Initialize Passport (no sessions — JWT-only)
+app.use(passport.initialize());
+
 // Mount Payment routes (Razorpay)
 app.use('/api/payment', paymentRoutes);
 
 // Mount general Auth routes
 app.use('/api/auth', authRoutes);
+
+// Mount Google OAuth routes
+app.use('/api/auth', googleAuthRoutes);
 
 // CORS Lockdown: allow specific origins in production
 const allowedOrigin = process.env.NODE_ENV === 'production'
@@ -61,7 +69,7 @@ app.use(cors({
     methods: ['GET', 'POST'],
 }));
 
-// Configure Helmet with secure CSP that allows required external CDNs, Google Analytics, and Razorpay Checkout
+// Configure Helmet with secure CSP that allows required external CDNs, Google Analytics, Razorpay, and Google OAuth
 app.use(
     helmet({
         contentSecurityPolicy: {
@@ -73,7 +81,8 @@ app.use(
                     "https://cdnjs.cloudflare.com",
                     "https://unpkg.com",
                     "https://www.googletagmanager.com",
-                    "https://checkout.razorpay.com"
+                    "https://checkout.razorpay.com",
+                    "https://accounts.google.com"
                 ],
                 styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
                 fontSrc: ["'self'", "https://fonts.gstatic.com"],
@@ -82,7 +91,9 @@ app.use(
                     "https://unpkg.com",
                     "https://www.google-analytics.com",
                     "https://region1.google-analytics.com",
-                    "https://api.razorpay.com"
+                    "https://api.razorpay.com",
+                    "https://accounts.google.com",
+                    "https://oauth2.googleapis.com"
                 ],
                 imgSrc: [
                     "'self'",
@@ -90,12 +101,14 @@ app.use(
                     "blob:",
                     "https://www.google-analytics.com",
                     "https://www.googletagmanager.com",
-                    "https://checkout.razorpay.com"
+                    "https://checkout.razorpay.com",
+                    "https://lh3.googleusercontent.com"
                 ],
                 frameSrc: [
                     "'self'",
                     "https://api.razorpay.com",
-                    "https://checkout.razorpay.com"
+                    "https://checkout.razorpay.com",
+                    "https://accounts.google.com"
                 ]
             }
         }

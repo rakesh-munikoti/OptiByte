@@ -43,8 +43,12 @@ RUN npx prisma generate
 # Ensure temp directory exists and is writable for uploads
 RUN mkdir -p temp && chmod 777 temp
 
+# Copy startup script and make it executable
+COPY startup.sh ./startup.sh
+RUN chmod +x ./startup.sh
+
 # Expose port (Render overrides this with process.env.PORT, server.js handles it)
 EXPOSE 3000
 
-# Run server.js
-CMD ["node", "server.js"]
+# Run startup.sh: applies DB migrations then starts the Node server
+CMD ["sh", "./startup.sh"]

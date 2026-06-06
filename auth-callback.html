@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signing In — OptiByte</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f5f0e8;
+            --accent-green: #39d353;
+            --accent-pink: #ff3864;
+            --border: 3px solid #000;
+            --font-display: 'Outfit', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: var(--bg);
+            font-family: var(--font-display);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .card {
+            border: var(--border);
+            background: #fff;
+            padding: 40px 50px;
+            box-shadow: 6px 6px 0 #000;
+            text-align: center;
+            max-width: 380px;
+        }
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 5px solid #000;
+            border-top-color: var(--accent-green);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        h1 {
+            font-size: 22px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+        }
+        p { font-size: 14px; color: #555; font-family: var(--font-mono); }
+        .error-card { background: var(--accent-pink); color: #fff; }
+        .error-card h1 { color: #fff; }
+        .error-card p { color: rgba(255,255,255,0.85); }
+        .btn-retry {
+            margin-top: 20px;
+            display: inline-block;
+            padding: 12px 24px;
+            background: #000;
+            color: #fff;
+            font-family: var(--font-display);
+            font-weight: 800;
+            text-transform: uppercase;
+            text-decoration: none;
+            border: var(--border);
+        }
+    </style>
+</head>
+<body>
+    <div class="card" id="card">
+        <div class="spinner"></div>
+        <h1>Signing You In...</h1>
+        <p>Please wait while we set up your account.</p>
+    </div>
+
+    <script>
+        (function () {
+            const params = new URLSearchParams(window.location.search);
+            const token = params.get('token');
+            const error = params.get('error');
+
+            if (error || !token) {
+                const card = document.getElementById('card');
+                card.classList.add('error-card');
+                card.innerHTML = `
+                    <h1>Sign-In Failed</h1>
+                    <p>${error === 'google_not_configured'
+                        ? 'Google login is not yet configured on this server.'
+                        : 'Something went wrong with Google sign-in. Please try again.'
+                    }</p>
+                    <a href="/login.html" class="btn-retry">Try Again</a>
+                `;
+                return;
+            }
+
+            // Store token and redirect to dashboard
+            localStorage.setItem('ob_token', token);
+            window.location.href = '/dashboard.html';
+        })();
+    </script>
+</body>
+</html>
