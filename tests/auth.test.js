@@ -1,8 +1,6 @@
 import request from 'supertest';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../services/prisma.js';
 import app from '../server.js';
-
-const prisma = new PrismaClient();
 
 describe('Auth API Routes', () => {
     const testUser = {

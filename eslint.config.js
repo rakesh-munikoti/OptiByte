@@ -33,6 +33,17 @@ export default [
         __dirname: 'readonly',
         __filename: 'readonly',
         
+        // Jest globals
+        describe: 'readonly',
+        it: 'readonly',
+        test: 'readonly',
+        expect: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        jest: 'readonly',
+        
         // k6 globals
         __ENV: 'readonly'
       },

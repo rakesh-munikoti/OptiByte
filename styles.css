@@ -2066,3 +2066,67 @@ body.dark-theme .brutalist-select:focus {
     color: var(--accent-amber) !important;
 }
 
+/* ==========================================================================
+   Responsive Hero Section & Typography
+   ========================================================================== */
+.hero-section {
+    margin-bottom: 25px;
+    background: var(--accent-yellow);
+    color: #000000;
+    border: var(--brutalist-border);
+    box-shadow: var(--brutalist-shadow);
+}
+
+.hero-content-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    text-align: left;
+}
+
+.hero-headline {
+    font-family: var(--font-display);
+    font-size: clamp(20px, 4vw, 32px); /* Fluid typography */
+    font-weight: 900;
+    text-transform: uppercase;
+    line-height: 1.1;
+    margin: 0;
+    letter-spacing: -0.5px;
+    color: #000000;
+}
+
+.hero-subheading {
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.5;
+    color: #000000;
+    margin: 0;
+    max-width: 900px;
+}
+
+.obup-badge {
+    background: #000000;
+    color: #ffffff;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-block;
+}
+
+body.dark-theme .hero-section {
+    background: var(--accent-yellow);
+    color: #000000;
+    border-color: #FFFFFF;
+    box-shadow: 6px 6px 0px 0px #FFFFFF;
+}
+
+body.dark-theme .hero-headline {
+    color: #000000;
+}
+
+body.dark-theme .hero-subheading {
+    color: #000000;
+}
+

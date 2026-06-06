@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { logger } from '../services/logger.js';
+import { getPythonCommand } from '../services/pythonService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,9 +20,9 @@ export const convertFile = (req, res) => {
 
     const tempPath = req.file.path;
     
-    // We use the full path to python directly to ensure it works in PM2/cron environments
-    // In Render, `python` is aliased to python3 automatically.
-    execFile('python', ['-m', 'markitdown', tempPath], (execErr, stdout, stderr) => {
+    // We use the dynamically detected Python command to ensure it works across all environments
+    const pythonCmd = getPythonCommand();
+    execFile(pythonCmd, ['-m', 'markitdown', tempPath], (execErr, stdout, stderr) => {
         // Clean up the temporary uploaded file asynchronously
         fs.unlink(tempPath, (unlinkErr) => {
             if (unlinkErr) logger.error('Error deleting temp file', unlinkErr);

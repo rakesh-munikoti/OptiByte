@@ -6,14 +6,20 @@ let tiktokenInstance = null;
 let tiktokenLoaded = false;
 let onTokenizerLoadedCallback = null;
 
-// Initialize dynamic loader for js-tiktoken ESM
+// Initialize dynamic loader for js-tiktoken (Node.js vs Browser detection)
 async function initTiktoken() {
     try {
-        // Load js-tiktoken directly from unpkg CDN
-        const tiktokenModule = await import('https://unpkg.com/js-tiktoken@1.1.2/esm/index.js');
+        let tiktokenModule;
+        if (typeof window === 'undefined') {
+            // Node.js environment: Load the locally installed npm package
+            tiktokenModule = await import('js-tiktoken');
+        } else {
+            // Browser environment: Load directly from unpkg CDN
+            tiktokenModule = await import('https://unpkg.com/js-tiktoken@1.1.2/esm/index.js');
+        }
+
         if (tiktokenModule && tiktokenModule.getEncoding) {
             // Load official cl100k_base ranks (used by GPT-4 and Claude 3)
-            // js-tiktoken handles fetching cl100k_base.json ranks internally from unpkg
             tiktokenInstance = tiktokenModule.getEncoding('cl100k_base');
             tiktokenLoaded = true;
             console.log('OptiByte: 100% exact cl100k_base BPE tokenizer loaded successfully.');
@@ -22,7 +28,7 @@ async function initTiktoken() {
             }
         }
     } catch (e) {
-        console.warn('OptiByte: CDN loading failed or offline. Defaulting to 98% accurate high-fidelity local BPE estimator.', e);
+        console.warn('OptiByte: CDN/Local BPE loading failed. Defaulting to 98% accurate high-fidelity local BPE estimator.', e);
     }
 }
 

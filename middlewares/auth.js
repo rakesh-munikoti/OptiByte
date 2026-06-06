@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../services/prisma.js';
 import jwt from 'jsonwebtoken';
-
-const prisma = new PrismaClient();
 
 // API Key Validation Middleware
 export const authenticateApiKey = async (req, res, next) => {

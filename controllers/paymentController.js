@@ -1,9 +1,7 @@
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../services/prisma.js';
 import { logger } from '../services/logger.js';
-
-const prisma = new PrismaClient();
 
 const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID || 'dummy_id',

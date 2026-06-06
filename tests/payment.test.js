@@ -22,11 +22,9 @@ jest.unstable_mockModule('razorpay', () => {
 // Dynamic imports
 const { default: Razorpay } = await import('razorpay');
 const { default: app } = await import('../server.js');
-const { PrismaClient } = await import('@prisma/client');
+const { prisma } = await import('../services/prisma.js');
 const { default: request } = await import('supertest');
 const { default: crypto } = await import('crypto');
-
-const prisma = new PrismaClient();
 
 describe('Payment API Routes', () => {
     beforeAll(() => {

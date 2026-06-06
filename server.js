@@ -23,6 +23,7 @@ import { exec } from 'child_process';
 
 import { logger } from './services/logger.js';
 import { globalLimiter } from './middlewares/rateLimiters.js';
+import { checkPythonEnvironment } from './services/pythonService.js';
 import apiRoutes from './routes/api.js';
 import authRoutes from './routes/auth.js';
 import paymentRoutes from './routes/payment.js';
@@ -117,15 +118,16 @@ if (globalLimiter) {
     app.use(globalLimiter);
 }
 
-// Block access to sensitive server-side files and directories
+// Block access to sensitive server-side files and directories, allowing shared browser services
 app.use((req, res, next) => {
     const blockedFiles = ['/server.js', '/package.json', '/package-lock.json', '/test.js', '/dockerfile'];
     const blockedDirs = ['/temp', '/node_modules', '/controllers', '/routes', '/services', '/middlewares', '/prisma'];
     const urlLower = req.path.toLowerCase();
+    const isSharedBrowserService = urlLower === '/services/tokenizer.js' || urlLower === '/services/compressor.js';
 
     if (
         blockedFiles.includes(urlLower) || 
-        blockedDirs.some(dir => urlLower.startsWith(dir)) ||
+        (blockedDirs.some(dir => urlLower.startsWith(dir)) && !isSharedBrowserService) ||
         urlLower.includes('.git') ||
         urlLower.includes('.env') ||
         urlLower.endsWith('.db') ||
@@ -182,53 +184,12 @@ if (process.env.NODE_ENV !== 'test') {
 // Mount main API routes
 app.use('/api', apiRoutes);
 
-// Cached python environment status
-let pythonStatus = {
-    checked: false,
-    cmd: null,
-    hasMarkItDown: false,
-    message: 'Checking...',
-    runMethod: ''
-};
-
-function checkPythonEnvironment(callback) {
-    if (pythonStatus.checked) {
-        if (callback) callback(pythonStatus);
-        return;
-    }
-
-    const isWin = process.platform === 'win32';
-    const commands = isWin ? ['python', 'py', 'python3'] : ['python3', 'python'];
-
-    let index = 0;
-    function tryNext() {
-        if (index >= commands.length) {
-            pythonStatus.checked = true;
-            pythonStatus.cmd = null;
-            pythonStatus.hasMarkItDown = false;
-            pythonStatus.message = 'Python is not installed or not on PATH.';
-            if (callback) callback(pythonStatus);
-            return;
-        }
-        const cmd = commands[index++];
-        exec(`${cmd} -c "import markitdown"`, (error) => {
-            if (!error) {
-                pythonStatus.checked = true;
-                pythonStatus.cmd = cmd;
-                pythonStatus.hasMarkItDown = true;
-                pythonStatus.message = 'Server running. MarkItDown ready via ' + cmd + '.';
-                if (callback) callback(pythonStatus);
-            } else {
-                tryNext();
-            }
-        });
-    }
-    tryNext();
-}
+// Trigger Python check on startup
+checkPythonEnvironment().catch(err => logger.error('Failed to run initial Python environment check', err));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-    checkPythonEnvironment((status) => {
+    checkPythonEnvironment().then((status) => {
         const memory = process.memoryUsage();
         res.json({
             status: status.hasMarkItDown ? 'ok' : 'warning',
@@ -237,6 +198,9 @@ app.get('/api/health', (req, res) => {
                 rss: `${Math.round(memory.rss / 1024 / 1024)} MB`
             }
         });
+    }).catch((err) => {
+        logger.error('Health check dynamic environment resolution failed', err);
+        res.status(500).json({ status: 'error', message: err.message });
     });
 });
 

@@ -1,11 +1,11 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../services/prisma.js';
 import { logger } from '../services/logger.js';
+import { authenticateJWT } from '../middlewares/auth.js';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret';
 
 // JWT Generation helper
@@ -105,36 +105,37 @@ router.post('/login', async (req, res) => {
     }
 });
 
-// Auth Middleware (can be exported and used in server.js or used here)
-export const authenticateJWT = (req, res, next) => {
-    const authHeader = req.headers.authorization;
-
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-        const token = authHeader.split(' ')[1];
-
-        jwt.verify(token, JWT_SECRET, (err, decoded) => {
-            if (err) {
-                return res.status(403).json({ success: false, error: 'Token expired or invalid.', code: 'INVALID_TOKEN' });
-            }
-            req.user = decoded;
-            next();
-        });
-    } else {
-        res.status(401).json({ success: false, error: 'Authentication token required.', code: 'UNAUTHORIZED' });
-    }
-};
-
 // Get current user profile and stats
 router.get('/me', authenticateJWT, async (req, res) => {
     try {
         const user = await prisma.user.findUnique({
             where: { id: req.user.id },
-            select: { email: true, plan: true, dailyLimit: true, usedToday: true, apiKey: true, lastUsedDate: true }
+            select: { id: true, email: true, plan: true, dailyLimit: true, usedToday: true, apiKey: true, lastUsedDate: true }
         });
         
         if (!user) return res.status(404).json({ success: false, error: 'User not found' });
         
-        res.json({ success: true, user });
+        const dateStr = new Date().toISOString().split('T')[0];
+        
+        // Reset daily token usage if date has changed
+        if (user.lastUsedDate !== dateStr) {
+            user.usedToday = 0;
+            user.lastUsedDate = dateStr;
+            
+            await prisma.user.update({
+                where: { id: user.id },
+                data: {
+                    usedToday: 0,
+                    lastUsedDate: dateStr
+                }
+            });
+            logger.info('Reset daily token usage on profile fetch', { email: user.email });
+        }
+        
+        // Don't return the database ID in response to keep it clean
+        const { id, ...sanitizedUser } = user;
+        
+        res.json({ success: true, user: sanitizedUser });
     } catch (err) {
         logger.error('Error fetching user profile', err);
         res.status(500).json({ success: false, error: 'Server error' });

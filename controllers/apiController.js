@@ -1,10 +1,8 @@
 import { logger } from '../services/logger.js';
 import { compressText } from '../services/compressor.js';
 import { countTokens } from '../services/tokenizer.js';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../services/prisma.js';
 import fs from 'fs';
-
-const prisma = new PrismaClient();
 
 export const optimizeText = async (req, res) => {
     const { text, level, rules } = req.body;
